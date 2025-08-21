@@ -1,16 +1,19 @@
-# Bluetooth Keyboard: Leopold FC750R
+# Custom Bluetooth Keyboard: Leopold FC750R
 
-Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard by designing the custom schematic and PCB layout, assembling the keyboard, and testing the complete system. 
+🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth Keyboard's schematic and PCB layout, assembled the keyboard, and tested the complete system. 
 
-📑 The complete project document can be viewed [here](https://docs.google.com/document/d/1T1kuHEfLhl1W9Vp5NQ1bjV8UXPvdlBXKJn0wyxQ07zg/edit?usp=sharing)
+- To interact with the schematic, PCB layout, and 3D model, click [here]()
+- To reead the complete project document, click [here](https://docs.google.com/document/d/1T1kuHEfLhl1W9Vp5NQ1bjV8UXPvdlBXKJn0wyxQ07zg/edit?usp=sharing)
 
-1. Main Picture 
+*Add the main picture here*
 
-3. Embed Altium 365 Viewer 
+### 🎬 Custom Bluetooth Keyboard: Leopold FC750R 
 
-4. Video 1 (Official Demo Video) 
+*Add the video here*
 
-5. Video 2 (Firmware Devleopment Video)
+### 🎬 Firmware Development Demo 
+
+*Add the video here*
 
 ### ⚠️ Copyright Notice
 
