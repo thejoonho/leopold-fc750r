@@ -22,23 +22,19 @@
         compatible = "nordic,npm1300";
         reg = <0x6b>;
 
-
         // ship-to-active-time = <96>;
-
-
         // long-press-reset = "one_button";
-
 
         npm1300_ek_gpio: gpio-controller {
             compatible = "nordic,npm1300-gpio";
             gpio-controller;
             #gpio-cells = <2>;
             ngpios = <5>;
+
         };
 
         npm1300_ek_regulators: regulators {
             compatible = "nordic,npm1300-regulator";
-
 
             npm1300_ek_buck1: BUCK1 {
                 regulator-min-microvolt = <1000000>;
@@ -47,12 +43,7 @@
                 retention-microvolt = <1500000>;
 
                 retention-gpios = <&npm1300_ek_gpio 0 GPIO_ACTIVE_HIGH>;
-
-
-
             };
-
-
 
             npm1300_ek_buck2: BUCK2 {
                 regulator-min-microvolt = <1000000>;
@@ -60,13 +51,7 @@
                 regulator-init-microvolt = <1800000>;
                 retention-microvolt = <1500000>;
 
-
-
-
-
             };
-
-
 
             npm1300_ek_ldo1: LDO1 {
                 regulator-min-microvolt = <1000000>;
@@ -74,10 +59,7 @@
 
                 regulator-initial-mode = <NPM1300_LDSW_MODE_LDSW>;
 
-
             };
-
-
 
             npm1300_ek_ldo2: LDO2 {
                 regulator-min-microvolt = <1000000>;
@@ -85,9 +67,7 @@
 
                 regulator-initial-mode = <NPM1300_LDSW_MODE_LDSW>;
 
-
             };
-
         };
 
 
@@ -107,14 +87,13 @@
 
         };
 
-
         npm1300_ek_leds: leds {
             compatible = "nordic,npm1300-led";
             nordic,led0-mode = "error";
             nordic,led1-mode = "charging";
             nordic,led2-mode = "host";
-        };
 
+        };
     };
 };
 
@@ -123,6 +102,7 @@
 &npm1300_ek_pmic {
     host-int-gpios = <&gpio1 12 0>;
     pmic-int-pin = <1>;
+
 };
 
 /{
@@ -142,9 +122,7 @@
 
             keymap {
                 compatible = "input-keymap";
-                // Assumed: MATRIX_KEY(row, col, INPUT_KEY)
-
-                // Took out: MATRIX_KEY(1, 2, INPUT_KEY_7)
+                // MATRIX_KEY(row, col, INPUT_KEY)
                 keymap = <
                 MATRIX_KEY(0, 0, INPUT_KEY_0)
                 MATRIX_KEY(0, 1, INPUT_KEY_1)
@@ -160,6 +138,7 @@
                 MATRIX_KEY(1, 5, INPUT_KEY_SCROLLLOCK)
                 >;
 
+                // Index 1
                 row-size = <2>;
                 col-size = <6>;
             };
@@ -167,10 +146,11 @@
             col-drive-inactive;
             settle-time-us = <0>;
             no-ghostkey-check;
+
         };
     };
 
-    // Delete for DeviceTree Extension Alias Folder
+    // Delete from DeviceTree Extension Alias Folder
     aliases {
         /delete-property/ led0;
         /delete-property/ led1;
@@ -227,7 +207,7 @@
     };
 };
 
-// Delete for DeviceTree Extension Nodes Folder
+// Delete from DeviceTree Extension Nodes Folder
 /delete-node/ &{/leds/};
 /delete-node/ &{/buttons/};
 
@@ -247,20 +227,7 @@
     status = "disabled";
 };
 
-
-
-// Delete for DeviceTree Visual Editor (View Mode: Pins) -- DONT'T DO THIS
+// Do not delete from DeviceTree Visual Editor (View Mode: Pins). Example shown below:
 // &button0 {
     //     /delete-property/ gpios;
 // };
-
-/** TASK: WHAT IS THIS?  */
-// What is this?
-&arduino_adc {
-    io-channel-map = <0 &adc 1>,
-                     <1 &adc 2>,
-                     <2 &adc 4>,
-                     <3 &adc 5>,
-                     <4 &adc 6>,
-                     <5 &adc 7>;
-};

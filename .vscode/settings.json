@@ -4,6 +4,8 @@
         "bas.h": "c",
         "hids.h": "c",
         "gap.h": "c",
-        "input.h": "c"
+        "input.h": "c",
+        "stdio.h": "c",
+        "hci.h": "c"
     }
 }
