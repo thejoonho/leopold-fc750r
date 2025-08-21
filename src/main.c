@@ -133,90 +133,9 @@ static volatile bool vbus_connected;
  * This function forces the missing configurations to the nPM1300 to ensure that
  * theconfigurations shown in ./nPM1300_Config are always the case.
  */
-static int pmic_custom_settings(void) {
-  int rc;
-  uint8_t reg = 0;
-
-  // Set BUCK as 1.8V
-  rc = mfd_npm1300_reg_write(pmic, BUCK_BASE, BUCK1NORMVOUT_OFFSET, 0x08);
-  if (rc < 0) {
-    return rc;
-  }
-  rc = mfd_npm1300_reg_read(pmic, BUCK_BASE, BUCK1NORMVOUT_OFFSET, &reg);
-  if (rc < 0) {
-    return rc;
-  }
-  LOG_INF("BUCK1NORMVOUT = %d", reg);
-
-  // Set BUCK1 and BUCK2 ON/OFF Control as Software
-  rc = mfd_npm1300_reg_write(pmic, BUCK_BASE, BUCKSWCTRLSEL_OFFSET, 0x03);
-  if (rc < 0) {
-    return rc;
-  }
-  rc = mfd_npm1300_reg_read(pmic, BUCK_BASE, BUCKSWCTRLSEL_OFFSET, &reg);
-  if (rc < 0) {
-    return rc;
-  }
-  LOG_INF("BUCKSWCTRLSE = %d", reg);
-
-  // Set GPIO0 as Interrupt
-  rc = mfd_npm1300_reg_write(pmic, GPIO_BASE, GPIOMODE0_OFFSET, 0x00);
-  if (rc < 0) {
-    return rc;
-  }
-  rc = mfd_npm1300_reg_read(pmic, GPIO_BASE, GPIOMODE0_OFFSET, &reg);
-  if (rc < 0) {
-    return rc;
-  }
-  LOG_INF("GPIOMODE0 = %d", reg);
-
-  // Set GPIO0 as PULL DOWN
-  rc = mfd_npm1300_reg_write(pmic, GPIO_BASE, GPIODEN0_OFFSET, 0x01);
-  if (rc < 0) {
-    return rc;
-  }
-  rc = mfd_npm1300_reg_read(pmic, GPIO_BASE, GPIODEN0_OFFSET, &reg);
-  if (rc < 0) {
-    return rc;
-  }
-  LOG_INF("GPIOPUEN0 = %d", reg);
-
-  // Set VBUS Input Current Limiter to 1.5A
-  // rc = mfd_npm1300_reg_write(pmic, VBUSIN_BASE, VBUSINILIM0_OFFSET, 0x0F);
-  // if (rc < 0) {
-  //   return rc;
-  // }
-  // rc = mfd_npm1300_reg_read(pmic, VBUSIN_BASE, VBUSINILIM0_OFFSET, &reg);
-  // if (rc < 0) {
-  //   return rc;
-  // }
-  // LOG_INF("VBUSINILIM0 = %d", reg);
-
-  // rc = mfd_npm1300_reg_write(pmic, VBUSIN_BASE, TASKUPDATEILIMSW_OFFSET,
-  // 0x01); if (rc < 0) {
-  //   return rc;
-  // }
-  // rc = mfd_npm1300_reg_read(pmic, VBUSIN_BASE, TASKUPDATEILIMSW_OFFSET,
-  // &reg); if (rc < 0) {
-  //   return rc;
-  // }
-  // LOG_INF("TASKUPDATEILIMSW = %d", reg);
-
-  return 0;
-}
-
+static int pmic_custom_settings(void);
 static void event_callback(const struct device *dev, struct gpio_callback *cb,
-                           uint32_t pins) {
-  if (pins & BIT(NPM1300_EVENT_VBUS_DETECTED)) {
-    LOG_INF("Vbus connected\n");
-    vbus_connected = true;
-  }
-
-  if (pins & BIT(NPM1300_EVENT_VBUS_REMOVED)) {
-    LOG_INF("Vbus removed\n");
-    vbus_connected = false;
-  }
-}
+                           uint32_t pins);
 
 ////////////////////////////////////////////////////////////////////////
 //                        SETTINGS FLASH STORAGE                      //
@@ -506,7 +425,6 @@ static struct bt_conn_auth_info_cb conn_auth_info_callbacks = {
     .pairing_failed = pairing_failed,
 };
 
-/** TASK: These are for what LEDs should be on such as Caps Lock  */
 static void caps_lock_handler(const struct bt_hids_rep *rep);
 static void hids_outp_rep_handler(struct bt_hids_rep *rep, struct bt_conn *conn,
                                   bool write);
@@ -990,6 +908,91 @@ static void fg_update_handler(struct k_work *work) {
     k_work_schedule(&fg_update, K_SECONDS(60));
   } else {
     atomic_set(&fg_wait, false);
+  }
+}
+
+static int pmic_custom_settings(void) {
+  int rc;
+  uint8_t reg = 0;
+
+  // Set BUCK as 1.8V
+  rc = mfd_npm1300_reg_write(pmic, BUCK_BASE, BUCK1NORMVOUT_OFFSET, 0x08);
+  if (rc < 0) {
+    return rc;
+  }
+  rc = mfd_npm1300_reg_read(pmic, BUCK_BASE, BUCK1NORMVOUT_OFFSET, &reg);
+  if (rc < 0) {
+    return rc;
+  }
+  LOG_INF("BUCK1NORMVOUT = %d", reg);
+
+  // Set BUCK1 and BUCK2 ON/OFF Control as Software
+  rc = mfd_npm1300_reg_write(pmic, BUCK_BASE, BUCKSWCTRLSEL_OFFSET, 0x03);
+  if (rc < 0) {
+    return rc;
+  }
+  rc = mfd_npm1300_reg_read(pmic, BUCK_BASE, BUCKSWCTRLSEL_OFFSET, &reg);
+  if (rc < 0) {
+    return rc;
+  }
+  LOG_INF("BUCKSWCTRLSE = %d", reg);
+
+  // Set GPIO0 as Interrupt
+  rc = mfd_npm1300_reg_write(pmic, GPIO_BASE, GPIOMODE0_OFFSET, 0x00);
+  if (rc < 0) {
+    return rc;
+  }
+  rc = mfd_npm1300_reg_read(pmic, GPIO_BASE, GPIOMODE0_OFFSET, &reg);
+  if (rc < 0) {
+    return rc;
+  }
+  LOG_INF("GPIOMODE0 = %d", reg);
+
+  // Set GPIO0 as PULL DOWN
+  rc = mfd_npm1300_reg_write(pmic, GPIO_BASE, GPIODEN0_OFFSET, 0x01);
+  if (rc < 0) {
+    return rc;
+  }
+  rc = mfd_npm1300_reg_read(pmic, GPIO_BASE, GPIODEN0_OFFSET, &reg);
+  if (rc < 0) {
+    return rc;
+  }
+  LOG_INF("GPIOPUEN0 = %d", reg);
+
+  // Set VBUS Input Current Limiter to 1.5A
+  // rc = mfd_npm1300_reg_write(pmic, VBUSIN_BASE, VBUSINILIM0_OFFSET, 0x0F);
+  // if (rc < 0) {
+  //   return rc;
+  // }
+  // rc = mfd_npm1300_reg_read(pmic, VBUSIN_BASE, VBUSINILIM0_OFFSET, &reg);
+  // if (rc < 0) {
+  //   return rc;
+  // }
+  // LOG_INF("VBUSINILIM0 = %d", reg);
+
+  // rc = mfd_npm1300_reg_write(pmic, VBUSIN_BASE, TASKUPDATEILIMSW_OFFSET,
+  // 0x01); if (rc < 0) {
+  //   return rc;
+  // }
+  // rc = mfd_npm1300_reg_read(pmic, VBUSIN_BASE, TASKUPDATEILIMSW_OFFSET,
+  // &reg); if (rc < 0) {
+  //   return rc;
+  // }
+  // LOG_INF("TASKUPDATEILIMSW = %d", reg);
+
+  return 0;
+}
+
+static void event_callback(const struct device *dev, struct gpio_callback *cb,
+                           uint32_t pins) {
+  if (pins & BIT(NPM1300_EVENT_VBUS_DETECTED)) {
+    LOG_INF("Vbus connected\n");
+    vbus_connected = true;
+  }
+
+  if (pins & BIT(NPM1300_EVENT_VBUS_REMOVED)) {
+    LOG_INF("Vbus removed\n");
+    vbus_connected = false;
   }
 }
 
@@ -1643,7 +1646,6 @@ static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
 static void caps_lock_handler(const struct bt_hids_rep *rep) {
   uint8_t report_val =
       ((*rep->data) & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) ? 1 : 0;
-  // dk_set_led(LED_CAPS_LOCK, report_val);
 }
 
 // PS CHECK
@@ -1906,16 +1908,6 @@ static int kb_set_report(const struct device *dev, const uint8_t type,
     LOG_WRN("Unsupported report type");
     return -ENOTSUP;
   }
-
-  /** TASK: See if you need want to use this */
-  // for (unsigned int i = 0; i < ARRAY_SIZE(kb_leds); i++) {
-  //   if (kb_leds[i].port == NULL) {
-  //     continue;
-  //   }
-
-  //   // USED to light up
-  //   (void)gpio_pin_set_dt(&kb_leds[i], buf[0] & BIT(i));
-  // }
 
   return 0;
 }
