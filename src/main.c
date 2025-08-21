@@ -8,15 +8,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/** CHECK IF THERE IS ANY TASK:
- *
- * 1. We may have to write 1.5A for VBUSIN0 on the nPM1300 register allowing the
- * LEDs to draw more current...
- *
- * 2. Paralle structure and update the copywrite in all areas
- *
- */
-
 #include <assert.h>
 #include <bluetooth/services/hids.h>
 #include <errno.h>

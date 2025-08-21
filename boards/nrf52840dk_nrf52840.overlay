@@ -16,6 +16,7 @@
         psels = <NRF_PSEL(TWIM_SDA, 0, 4)>, <NRF_PSEL(TWIM_SCL, 0, 26)>;
     };
 };
+
 &arduino_i2c {
     npm1300_ek_pmic: pmic@6b {
         compatible = "nordic,npm1300";
