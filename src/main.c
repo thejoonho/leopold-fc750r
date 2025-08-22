@@ -54,7 +54,7 @@
 #include "fuel_gauge.h"
 
 ////////////////////////////////////////////////////////////////////////
-//                               FULL SYSTEM                          //
+//                             FULL SYSTEM                            //
 ////////////////////////////////////////////////////////////////////////
 
 #define WIRELESS_MODE 1
@@ -72,10 +72,11 @@ static const char img_data[] = {
 #include "logo.file"
 };
 
-/** @brief Print Nordic Semiconductor Logo
+/** @brief print_logo
  *
- * @note To pay my respect to the Nordic Semiconductor engineers for their
- * incredible engineering. ALSO, the terminal has never looked so BEAUTIFUL!
+ * @note Prints the Nordic Semiconductor Logo to pay my respect to the Nordic
+ * Semiconductor engineers for their incredible engineering. ALSO, the terminal
+ * has never looked so BEAUTIFUL!
  */
 static void print_logo(void);
 
@@ -91,20 +92,9 @@ static void print_logo(void);
 #define GPIOMODE0_OFFSET 0x00U
 #define GPIODEN0_OFFSET 0x0FU
 
-/**
- * @note fg = fuel guage
- */
+// fg = fuel gauge
 static atomic_t fg_wait = false;
 static struct k_work_delayable fg_update;
-
-/**
- * @brief fg_update_handler
- *
- * @note When the keyboard is in WIRELESS_MODE, it'll constantly update the
- * central the battery percentage every minute. When the keyboard switches to
- * WIRED_MODE from WIRELESS_MODE it'll stop.
- */
-static void fg_update_handler(struct k_work *work);
 
 static const struct device *pmic = DEVICE_DT_GET(DT_NODELABEL(npm1300_ek_pmic));
 static const struct device *pmic_gpio =
@@ -118,11 +108,18 @@ static const struct device *charger =
 
 static volatile bool vbus_connected;
 
-/**
+/** @brief fg_update_handler
+ *
+ * @note When the keyboard is in WIRELESS_MODE, it'll constantly update the
+ * central with the battery percentage every minute.
+ */
+static void fg_update_handler(struct k_work *work);
+
+/** @brief pmic_custom_settings
+ *
  * @note When the nPM1300 resets itself (e.g. VBAT is disconnected and
- * reconnected), several configurations shown in ./nPM1300_Config are missing.
- * This function forces the missing configurations to the nPM1300 to ensure that
- * theconfigurations shown in ./nPM1300_Config are always the case.
+ * reconnected), it uses the factory default configurations. This function 
+ * changes those configurations shown in ./nPM_PowerUp_Config
  */
 static int pmic_custom_settings(void);
 static void event_callback(const struct device *dev, struct gpio_callback *cb,
@@ -148,10 +145,10 @@ static bt_addr_le_t central3_addr = {0};
 
 static const bt_addr_le_t clean_addr = {0};
 
-/** @brief Leopold FC750R ZMS Storage Handle
+/** @brief leopold_fc750R_handle_set
  *
- * @note Initializes the current_central, central1_addr, central1_addr, and
- * central1_addr with the stored value.
+ * @note Initializes the current_central, central_addr, central2_addr, and
+ * central3_addr with the stored value.
  */
 int leopold_fc750R_handle_set(const char *name, size_t len,
                               settings_read_cb read_cb, void *cb_arg);
@@ -170,14 +167,14 @@ struct kb_event {
 
 K_MSGQ_DEFINE(kb_msgq, sizeof(struct kb_event), 2, 1);  // 2 or 4?
 
-/** @brief Key Pressed
+/** @brief key_pressed
  *
  * @note Calls the appropriate functions based on the user's key press
  */
 static void key_pressed(struct input_event *evt, void *user_data);
 INPUT_CALLBACK_DEFINE(NULL, key_pressed, NULL);
 
-/** @brief Central ID Control
+/** @brief central_id_ctrl
  *
  * @note Ensures that the current_central, central1_addr, central2_addr, and
  * central3_addr are properly updated in the ZMS flash storage.
@@ -286,6 +283,7 @@ static const struct bt_data ad_pm[] = {
     BT_DATA_BYTES(BT_DATA_UUID16_ALL, BT_UUID_16_ENCODE(BT_UUID_HIDS_VAL),
                   BT_UUID_16_ENCODE(BT_UUID_BAS_VAL)),
 };
+
 /**
  * @note Pairing scanning packets: Appearance
  */
@@ -296,7 +294,7 @@ static const struct bt_data sd_pm[] = {
 };
 
 /**
- * @note Pairing advertisement parameters: RPA advertisement, undirected,
+ * @note Pairing advertisement parameters: Undirected,
  * connectable, scannable, use identity address, and 100~150ms interval
  */
 
@@ -330,6 +328,7 @@ static const struct bt_le_adv_param adv_param_pm3 = {
 static const struct bt_data ad_cm[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 };
+
 /**
  * @note Connecting scanning packets: Local name
  */
@@ -338,10 +337,9 @@ static const struct bt_data sd_cm[] = {
 };
 
 /**
- * @note Connection Mode Parameters: RPA advertisement, undirected, connectable,
+ * @note Connection Mode Parameters: Undirected, connectable,
  * scannable, filter accept for scanning packets and connection, and 20ms
- * interval
- * @note Following Apple BLE Accessory Guidelines
+ * interval (20ms to follow Apple BLE Accessory Guidelines)
  */
 
 static const struct bt_le_adv_param adv_param_cm1 = {
@@ -375,13 +373,15 @@ static void pm_cancel_handler(struct k_work *work);
 static void cm_cancel_handler(struct k_work *work);
 static void adv_work_handler(struct k_work *work);
 
-/** @brief Advertising Process
+/** @brief advertising_start
  *
  * @note The advertisement process can either be for pairing/connection. The
  * function is called either from main (during startup), recycled_cb (for safe
  * advertising), key_pressed (wake-up advertising), or central_id_ctrl.
+ *
  * @note If Pairing fails, it'll not reattempt the pairing process.
  * It'll stop advertising after 10min.
+ *
  * @note If Connection fails, it'll not reattempt the pairing process.
  * It'll stop advertising after 1min.
  */
@@ -431,6 +431,7 @@ static void ble_hid_init(void);
  */
 static int key_report_con_send(const struct keyboard_state *state,
                                bool boot_mode, struct bt_conn *conn);
+
 /** @brief Function process and send keyboard state to all active connections
  *
  * Function process global keyboard state and send it to all connected
@@ -439,6 +440,7 @@ static int key_report_con_send(const struct keyboard_state *state,
  * @return 0 on success or negative error code.
  */
 static int key_report_send(void);
+
 /** @brief Change key code to ctrl code mask
  *
  *  Function changes the key code to the mask in the control code
@@ -478,9 +480,9 @@ enum kb_report_idx {
 // HID input report storage & module state
 UDC_STATIC_BUF_DEFINE(report, KB_REPORT_COUNT);  // Submitting input reports
 static uint32_t kb_duration;
-static bool kb_ready;  // Let's the system know if it's ok to send
+static bool kb_ready;  // Lets the system know if it's ok to send
 
-// Updates if the USB inteacion is ready or not
+// Updates if the USB interaction is ready or not
 static void kb_iface_ready(const struct device *dev, const bool ready);
 static int kb_get_report(const struct device *dev, const uint8_t type,
                          const uint8_t id, const uint16_t len,
@@ -550,7 +552,7 @@ int main(void) {
   }
 
   if (fuel_gauge_init(charger) < 0) {
-    LOG_ERR("Could not initialise fuel gauge.");
+    LOG_ERR("Could not initialize fuel gauge.");
     return 1;
   } else {
     LOG_INF("Fuel gauge is ready.");
@@ -608,7 +610,7 @@ int main(void) {
   atomic_set(&fg_wait, false);
   k_work_init_delayable(&fg_update, fg_update_handler);
 
-  LOG_INF("Power Management Setup Completee");
+  LOG_INF("Power Management Setup Complete");
 
   // BLE HID
   printk("\n\x1b[32m\x1b[1mBLE HID Setup:\x1b[39m\x1b[0m\n");
@@ -805,13 +807,13 @@ int main(void) {
     k_msgq_get(&kb_msgq, &kb_evt, K_FOREVER);
 
     if (atomic_get(&nRF_mode) == WIRED_MODE) {
-      /**
-       * TASK: Add the following
-       * 1. Check if the device is connected via BLE. If so, safely disconnect.
-       *
-       * 2. Check if the kb_evt.code is a modifier key. If it's a hid, proceed
-       * to the appropriate code.
-       */
+      // Disconnect with any BLE connections
+      if (conn_mode[0].conn != NULL) {
+        atomic_set(&adv_safe, false);
+        bt_conn_disconnect(conn_mode[0].conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
+        LOG_INF("Disconnecting from current BLE connection");
+        return 0;
+      }
 
       uint8_t key = input_to_hid_modifier(kb_evt.code);
       if (key == 0) {
@@ -926,7 +928,7 @@ static int pmic_custom_settings(void) {
   if (rc < 0) {
     return rc;
   }
-  LOG_INF("BUCKSWCTRLSE = %d", reg);
+  LOG_INF("BUCKSWCTRLSEL = %d", reg);
 
   // Set GPIO0 as Interrupt
   rc = mfd_npm1300_reg_write(pmic, GPIO_BASE, GPIOMODE0_OFFSET, 0x00);
@@ -1319,7 +1321,7 @@ static void adv_work_handler(struct k_work *work) {
 
     err = bt_le_filter_accept_list_add(peer);
     if (err) {
-      LOG_WRN("BLE Filter Accept List did not added address %s", addr_str);
+      LOG_WRN("BLE Filter Accept List did not add address %s", addr_str);
       return;
     } else {
       LOG_INF("BLE Filter Accept List added address %s", addr_str);
@@ -1635,8 +1637,8 @@ static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
 }
 
 static void caps_lock_handler(const struct bt_hids_rep *rep) {
-  uint8_t report_val =
-      ((*rep->data) & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) ? 1 : 0;
+  // uint8_t report_val =
+  //     ((*rep->data) & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) ? 1 : 0;
 }
 
 // PS CHECK
@@ -1878,12 +1880,14 @@ static int hid_kbd_state_key_clear(uint8_t key) {
   return -EINVAL;
 }
 
+// PS CHECK
 static void kb_iface_ready(const struct device *dev, const bool ready) {
   LOG_INF("HID device %s interface is %s", dev->name,
           ready ? "ready" : "not ready");
   kb_ready = ready;
 }
 
+// PS CHECK
 static int kb_get_report(const struct device *dev, const uint8_t type,
                          const uint8_t id, const uint16_t len,
                          uint8_t *const buf) {
@@ -1892,6 +1896,7 @@ static int kb_get_report(const struct device *dev, const uint8_t type,
   return 0;
 }
 
+// PS CHECK
 static int kb_set_report(const struct device *dev, const uint8_t type,
                          const uint8_t id, const uint16_t len,
                          const uint8_t *const buf) {
@@ -1903,28 +1908,33 @@ static int kb_set_report(const struct device *dev, const uint8_t type,
   return 0;
 }
 
+// PS CHECK
 static void kb_set_idle(const struct device *dev, const uint8_t id,
                         const uint32_t duration) {
   LOG_INF("Set Idle %u to %u", id, duration);
   kb_duration = duration;
 }
 
+// PS CHECK
 static uint32_t kb_get_idle(const struct device *dev, const uint8_t id) {
   LOG_INF("Get Idle %u to %u", id, kb_duration);
   return kb_duration;
 }
 
+// PS CHECK
 static void kb_set_protocol(const struct device *dev, const uint8_t proto) {
   LOG_INF("Protocol changed to %s",
           proto == 0U ? "Boot Protocol" : "Report Protocol");
 }
 
+// PS CHECK
 static void kb_output_report(const struct device *dev, const uint16_t len,
                              const uint8_t *const buf) {
   LOG_HEXDUMP_DBG(buf, len, "o.r.");
   kb_set_report(dev, HID_REPORT_TYPE_OUTPUT, 0U, len, buf);
 }
 
+// PS CHECK
 static void msg_cb(struct usbd_context *const usbd_ctx,
                    const struct usbd_msg *const msg) {
   LOG_INF("USBD message: %s", usbd_msg_type_string(msg->type));
@@ -1949,6 +1959,7 @@ static void msg_cb(struct usbd_context *const usbd_ctx,
 }
 /* doc device msg-cb end */
 
+// PS CHECK
 static int usb_hid_report_set(uint8_t key) {
   uint8_t ctrl_mask = button_ctrl_code(key);
 
@@ -1970,6 +1981,7 @@ static int usb_hid_report_set(uint8_t key) {
   return -EBUSY;
 }
 
+// PS CHECK
 static int usb_hid_report_clear(uint8_t key) {
   uint8_t ctrl_mask = button_ctrl_code(key);
 
