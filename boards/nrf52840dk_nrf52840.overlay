@@ -227,6 +227,11 @@
     status = "disabled";
 };
 
+&spi3 {
+    status = "disabled";
+};
+
+
 // Do not delete from DeviceTree Visual Editor (View Mode: Pins). Example shown below:
 // &button0 {
     //     /delete-property/ gpios;

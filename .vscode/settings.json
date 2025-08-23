@@ -6,6 +6,10 @@
         "gap.h": "c",
         "input.h": "c",
         "stdio.h": "c",
-        "hci.h": "c"
+        "hci.h": "c",
+        "flash.h": "c",
+        "dis.h": "c",
+        "thread_stack.h": "c",
+        "settings.h": "c"
     }
 }

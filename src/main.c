@@ -740,7 +740,7 @@ int main(void) {
 
   LOG_INF("ZMS Flash Storage Setup Complete");
 
-  // USB SETTINGS 
+  // USB SETTINGS
   printk("\n\x1b[32m\x1b[1mUSB Settings Setup:\x1b[39m\x1b[0m\n");
   usb_hid_ready = false;
   struct usbd_context *sample_usbd;
@@ -791,7 +791,6 @@ int main(void) {
   }
 
   LOG_INF("Leopold FC750R Mechanical Setup Complete");
-
 
   // POST-SETUP LOGS
   printk("\n\x1b[32m\x1b[1mPost-Setup Logs:\x1b[39m\x1b[0m\n");
@@ -852,7 +851,6 @@ int main(void) {
     }
 
     if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
-
       uint8_t key = input_to_hid_modifier(kb_evt.code);
       if (key == 0) {
         key = (uint8_t)input_to_hid_code(kb_evt.code);
@@ -1388,6 +1386,11 @@ static void connected_cb(struct bt_conn *conn, uint8_t err) {
     LOG_WRN("Failed to request setting security level 4 (err %u)", err);
     return;
   }
+
+  // Notify the battery level
+  if (atomic_get(&ble_adv_mode) == CONNECTING_MODE) {
+    k_work_schedule(&fg_update, K_SECONDS(0));
+  }
 }
 
 static void disconnected_cb(struct bt_conn *conn, uint8_t reason) {
@@ -1603,6 +1606,10 @@ static void pairing_complete(struct bt_conn *conn, bool bonded) {
 
   LOG_INF("Pairing completed: %s, bonded: %d", addr_str, bonded);
   atomic_set(&ble_adv_mode, CONNECTING_MODE);  // Reset to DCM
+
+  // Notify the battery state
+  k_work_schedule(&fg_update, K_SECONDS(0));
+
   return;
 }
 
