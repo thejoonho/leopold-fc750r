@@ -118,7 +118,7 @@ static void fg_update_handler(struct k_work *work);
 /** @brief pmic_custom_settings
  *
  * @note When the nPM1300 resets itself (e.g. VBAT is disconnected and
- * reconnected), it uses the factory default configurations. This function 
+ * reconnected), it uses the factory default configurations. This function
  * changes those configurations shown in ./nPM_PowerUp_Config
  */
 static int pmic_custom_settings(void);
@@ -612,11 +612,10 @@ int main(void) {
 
   LOG_INF("Power Management Setup Complete");
 
-  // BLE HID
-  printk("\n\x1b[32m\x1b[1mBLE HID Setup:\x1b[39m\x1b[0m\n");
+  // BLE SETTINGS
+  printk("\n\x1b[32m\x1b[1mBLE Settings Setup:\x1b[39m\x1b[0m\n");
   atomic_set(&ble_adv_mode, CONNECTING_MODE);
   atomic_set(&adv_safe, true);
-
   atomic_set(&enable_passkey_input, false);
   atomic_set(&idx_passkey_input, 0);
   pairing_key_start_time = 0;
@@ -661,7 +660,7 @@ int main(void) {
   k_work_init_delayable(&pm_cancel, pm_cancel_handler);
   k_work_init_delayable(&cm_cancel, cm_cancel_handler);
 
-  LOG_INF("BLE HID Setup Complete");
+  LOG_INF("BLE Settings Setup Complete");
 
   // ZMS FLASH STORAGE
   printk("\n\x1b[32m\x1b[1mZMS Flash Storage Setup:\x1b[39m\x1b[0m\n");
@@ -741,8 +740,8 @@ int main(void) {
 
   LOG_INF("ZMS Flash Storage Setup Complete");
 
-  // USB HID SETUP
-  printk("\n\x1b[32m\x1b[1mUSB HID Setup:\x1b[39m\x1b[0m\n");
+  // USB SETTINGS 
+  printk("\n\x1b[32m\x1b[1mUSB Settings Setup:\x1b[39m\x1b[0m\n");
   usb_hid_ready = false;
   struct usbd_context *sample_usbd;
   const struct device *hid_dev;
@@ -778,7 +777,7 @@ int main(void) {
     }
   }
 
-  LOG_INF("USB HID Setup Complete");
+  LOG_INF("USB Settings Setup Complete");
 
   // LEOPOLD FC750R MECHANICAL SETUP
   printk("\n\x1b[32m\x1b[1mLeopold FC750R Mechanical Setup:\x1b[39m\x1b[0m\n");
@@ -793,7 +792,6 @@ int main(void) {
 
   LOG_INF("Leopold FC750R Mechanical Setup Complete");
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // POST-SETUP LOGS
   printk("\n\x1b[32m\x1b[1mPost-Setup Logs:\x1b[39m\x1b[0m\n");
@@ -854,7 +852,6 @@ int main(void) {
     }
 
     if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
-      LOG_INF("In Main");
 
       uint8_t key = input_to_hid_modifier(kb_evt.code);
       if (key == 0) {
@@ -886,13 +883,11 @@ int main(void) {
 //                        FUNCTION DEFINITIONS                        //
 ////////////////////////////////////////////////////////////////////////
 
-// PS CHECK
 static void print_logo(void) {
   printk("\n%s", img_data);
   k_sleep(K_MSEC(1000));
 }
 
-// PS CHECK
 static void fg_update_handler(struct k_work *work) {
   uint8_t battery_level = (uint8_t)fuel_gauge_update(charger, vbus_connected);
   bt_bas_set_battery_level(battery_level);
@@ -979,17 +974,16 @@ static int pmic_custom_settings(void) {
 static void event_callback(const struct device *dev, struct gpio_callback *cb,
                            uint32_t pins) {
   if (pins & BIT(NPM1300_EVENT_VBUS_DETECTED)) {
-    LOG_INF("Vbus connected\n");
+    LOG_INF("Vbus connected");
     vbus_connected = true;
   }
 
   if (pins & BIT(NPM1300_EVENT_VBUS_REMOVED)) {
-    LOG_INF("Vbus removed\n");
+    LOG_INF("Vbus removed");
     vbus_connected = false;
   }
 }
 
-// PS CHECK
 int leopold_fc750R_handle_set(const char *name, size_t len,
                               settings_read_cb read_cb, void *cb_arg) {
   int err;
@@ -1022,7 +1016,6 @@ int leopold_fc750R_handle_set(const char *name, size_t len,
   return -ENOENT;
 }
 
-// PS CHECK
 static void key_pressed(struct input_event *evt, void *user_data) {
   int err;
   struct kb_event kb_evt;
@@ -1048,32 +1041,34 @@ static void key_pressed(struct input_event *evt, void *user_data) {
       return;
     }
 
-    // PAIRING & CONNECTION MODE
-    if (kb_evt.code == INPUT_KEY_PRINT) {
-      central_id_ctrl(kb_evt.value, 1);
-      return;
+    if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
+      // PAIRING & CONNECTION MODE
+      if (kb_evt.code == INPUT_KEY_PRINT) {
+        central_id_ctrl(kb_evt.value, 1);
+        return;
 
-    } else if (kb_evt.code == INPUT_KEY_SCROLLLOCK) {
-      central_id_ctrl(kb_evt.value, 2);
-      return;
+      } else if (kb_evt.code == INPUT_KEY_SCROLLLOCK) {
+        central_id_ctrl(kb_evt.value, 2);
+        return;
 
-    } else if (kb_evt.code == INPUT_KEY_PAUSE) {
-      central_id_ctrl(kb_evt.value, 3);
-      return;
-    }
+      } else if (kb_evt.code == INPUT_KEY_PAUSE) {
+        central_id_ctrl(kb_evt.value, 3);
+        return;
+      }
 
-    // INITIATE CONNECTION IF NO CENTRAL IS CONNECTED
-    if ((conn_mode[0].conn == NULL) && kb_evt.value &&
-        (atomic_get(&nRF_mode) == WIRELESS_MODE)) {
-      atomic_set(&ble_adv_mode, CONNECTING_MODE);
-      advertising_start();
-      return;
-    }
+      // INITIATE CONNECTION IF NO CENTRAL IS CONNECTED
+      if ((conn_mode[0].conn == NULL) && kb_evt.value &&
+          (atomic_get(&nRF_mode) == WIRELESS_MODE)) {
+        atomic_set(&ble_adv_mode, CONNECTING_MODE);
+        advertising_start();
+        return;
+      }
 
-    // BLE SECURITY LEVEL 4 PASSKEY ENTRY
-    if (atomic_get(&enable_passkey_input) && (kb_evt.value == 1)) {
-      process_passkey_input(kb_evt);
-      return;
+      // BLE SECURITY LEVEL 4 PASSKEY ENTRY
+      if (atomic_get(&enable_passkey_input) && (kb_evt.value == 1)) {
+        process_passkey_input(kb_evt);
+        return;
+      }
     }
 
     // REGISTER USER KEY PRESS
@@ -1087,7 +1082,6 @@ static void key_pressed(struct input_event *evt, void *user_data) {
   }
 }
 
-// PS CHECK
 static void central_id_ctrl(int32_t pressed, int central_id) {
   int err;
   int rc;
@@ -1190,21 +1184,18 @@ static void central_id_ctrl(int32_t pressed, int central_id) {
   }
 }
 
-// PS CHECK
 static void pm_cancel_handler(struct k_work *work) {
   if (conn_mode[0].conn == NULL) {
     bt_le_adv_stop();
   }
 }
 
-// PS CHECK
 static void cm_cancel_handler(struct k_work *work) {
   if (conn_mode[0].conn == NULL) {
     bt_le_adv_stop();
   }
 }
 
-// PS CHECK
 static void adv_work_handler(struct k_work *work) {
   int err;
   int rc;
@@ -1352,7 +1343,6 @@ static void adv_work_handler(struct k_work *work) {
   }
 }
 
-// PS CHECK
 static void advertising_start(void) {
   printk("\nBLE Advertising:\n");
   struct k_work_sync sync1, sync2, sync3;
@@ -1366,7 +1356,6 @@ static void advertising_start(void) {
   k_work_submit(&adv_work);
 }
 
-// PS CHECK
 static void connected_cb(struct bt_conn *conn, uint8_t err) {
   char addr_str[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr_str, sizeof(addr_str));
@@ -1401,7 +1390,6 @@ static void connected_cb(struct bt_conn *conn, uint8_t err) {
   }
 }
 
-// PS CHECK
 static void disconnected_cb(struct bt_conn *conn, uint8_t reason) {
   int err;
   char addr_str[BT_ADDR_LE_STR_LEN];
@@ -1431,7 +1419,6 @@ static void disconnected_cb(struct bt_conn *conn, uint8_t reason) {
   }
 }
 
-// PS CHECK
 static void recycled_cb(void) {
   LOG_INF(
       "Connection object available from previous conn. Disconnect is "
@@ -1444,7 +1431,6 @@ static void recycled_cb(void) {
   }
 }
 
-// PS CHECK
 static void security_changed_cb(struct bt_conn *conn, bt_security_t level,
                                 enum bt_security_err err) {
   char addr_str[BT_ADDR_LE_STR_LEN];
@@ -1459,13 +1445,11 @@ static void security_changed_cb(struct bt_conn *conn, bt_security_t level,
   }
 }
 
-// PS CHECK
 static void identity_resolved_cb(struct bt_conn *conn, const bt_addr_le_t *rpa,
                                  const bt_addr_le_t *identity) {
   LOG_INF("Remote identity address has been resolved");
 }
 
-// PS CHECK
 void process_passkey_input(struct kb_event kb_evt) {
   switch (kb_evt.code) {
     case INPUT_KEY_0:
@@ -1556,7 +1540,6 @@ void process_passkey_input(struct kb_event kb_evt) {
   }
 }
 
-// PS CHECK
 static void auth_passkey_entry(struct bt_conn *conn) {
   LOG_INF("Central is requesting for a passkey");
   printk("Enter Passkey: ");
@@ -1566,7 +1549,6 @@ static void auth_passkey_entry(struct bt_conn *conn) {
   passkey_conn = bt_conn_ref(conn);
 }
 
-// PS CHECK
 static void auth_cancel(struct bt_conn *conn) {
   char addr_str[BT_ADDR_LE_STR_LEN];
 
@@ -1576,7 +1558,6 @@ static void auth_cancel(struct bt_conn *conn) {
   // Will invoke pairing_failed function
 }
 
-// PS CHECK
 static void pairing_complete(struct bt_conn *conn, bool bonded) {
   int err;
   char addr_str[BT_ADDR_LE_STR_LEN];
@@ -1625,7 +1606,6 @@ static void pairing_complete(struct bt_conn *conn, bool bonded) {
   return;
 }
 
-// PS CHECK
 static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
   char addr[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -1641,7 +1621,6 @@ static void caps_lock_handler(const struct bt_hids_rep *rep) {
   //     ((*rep->data) & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) ? 1 : 0;
 }
 
-// PS CHECK
 static void hids_outp_rep_handler(struct bt_hids_rep *rep, struct bt_conn *conn,
                                   bool write) {
   char addr[BT_ADDR_LE_STR_LEN];
@@ -1656,7 +1635,6 @@ static void hids_outp_rep_handler(struct bt_hids_rep *rep, struct bt_conn *conn,
   caps_lock_handler(rep);
 }
 
-// PS CHECK
 static void hids_boot_kb_outp_rep_handler(struct bt_hids_rep *rep,
                                           struct bt_conn *conn, bool write) {
   char addr[BT_ADDR_LE_STR_LEN];
@@ -1671,7 +1649,6 @@ static void hids_boot_kb_outp_rep_handler(struct bt_hids_rep *rep,
   caps_lock_handler(rep);
 }
 
-// PS CHECK
 static void hids_pm_evt_handler(enum bt_hids_pm_evt evt, struct bt_conn *conn) {
   char addr[BT_ADDR_LE_STR_LEN];
   size_t i;
@@ -1705,7 +1682,6 @@ static void hids_pm_evt_handler(enum bt_hids_pm_evt evt, struct bt_conn *conn) {
   }
 }
 
-// PS CHECK
 static void ble_hid_init(void) {
   int err;
   struct bt_hids_init_param hids_init_obj = {0};
@@ -1790,7 +1766,6 @@ static void ble_hid_init(void) {
   __ASSERT(err == 0, "HIDS initialization failed\n");
 }
 
-// PS CHECK
 static int key_report_con_send(const struct keyboard_state *state,
                                bool boot_mode, struct bt_conn *conn) {
   int err = 0;
@@ -1818,7 +1793,6 @@ static int key_report_con_send(const struct keyboard_state *state,
   return err;
 }
 
-// PS CHECK
 static int key_report_send(void) {
   for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
     if (conn_mode[i].conn) {
@@ -1835,7 +1809,6 @@ static int key_report_send(void) {
   return 0;
 }
 
-// PS CHECK
 static uint8_t button_ctrl_code(uint8_t key) {
   if (KEY_CTRL_CODE_MIN <= key && key <= KEY_CTRL_CODE_MAX) {
     return (uint8_t)(1U << (key - KEY_CTRL_CODE_MIN));
@@ -1843,7 +1816,6 @@ static uint8_t button_ctrl_code(uint8_t key) {
   return 0;
 }
 
-// PS CHECK
 static int hid_kbd_state_key_set(uint8_t key) {
   uint8_t ctrl_mask = button_ctrl_code(key);
 
@@ -1862,7 +1834,6 @@ static int hid_kbd_state_key_set(uint8_t key) {
   return -EBUSY;
 }
 
-// PS CHECK
 static int hid_kbd_state_key_clear(uint8_t key) {
   uint8_t ctrl_mask = button_ctrl_code(key);
 
@@ -1880,14 +1851,12 @@ static int hid_kbd_state_key_clear(uint8_t key) {
   return -EINVAL;
 }
 
-// PS CHECK
 static void kb_iface_ready(const struct device *dev, const bool ready) {
   LOG_INF("HID device %s interface is %s", dev->name,
           ready ? "ready" : "not ready");
   kb_ready = ready;
 }
 
-// PS CHECK
 static int kb_get_report(const struct device *dev, const uint8_t type,
                          const uint8_t id, const uint16_t len,
                          uint8_t *const buf) {
@@ -1896,7 +1865,6 @@ static int kb_get_report(const struct device *dev, const uint8_t type,
   return 0;
 }
 
-// PS CHECK
 static int kb_set_report(const struct device *dev, const uint8_t type,
                          const uint8_t id, const uint16_t len,
                          const uint8_t *const buf) {
@@ -1908,33 +1876,28 @@ static int kb_set_report(const struct device *dev, const uint8_t type,
   return 0;
 }
 
-// PS CHECK
 static void kb_set_idle(const struct device *dev, const uint8_t id,
                         const uint32_t duration) {
   LOG_INF("Set Idle %u to %u", id, duration);
   kb_duration = duration;
 }
 
-// PS CHECK
 static uint32_t kb_get_idle(const struct device *dev, const uint8_t id) {
   LOG_INF("Get Idle %u to %u", id, kb_duration);
   return kb_duration;
 }
 
-// PS CHECK
 static void kb_set_protocol(const struct device *dev, const uint8_t proto) {
   LOG_INF("Protocol changed to %s",
           proto == 0U ? "Boot Protocol" : "Report Protocol");
 }
 
-// PS CHECK
 static void kb_output_report(const struct device *dev, const uint16_t len,
                              const uint8_t *const buf) {
   LOG_HEXDUMP_DBG(buf, len, "o.r.");
   kb_set_report(dev, HID_REPORT_TYPE_OUTPUT, 0U, len, buf);
 }
 
-// PS CHECK
 static void msg_cb(struct usbd_context *const usbd_ctx,
                    const struct usbd_msg *const msg) {
   LOG_INF("USBD message: %s", usbd_msg_type_string(msg->type));
@@ -1957,9 +1920,7 @@ static void msg_cb(struct usbd_context *const usbd_ctx,
     }
   }
 }
-/* doc device msg-cb end */
 
-// PS CHECK
 static int usb_hid_report_set(uint8_t key) {
   uint8_t ctrl_mask = button_ctrl_code(key);
 
@@ -1981,7 +1942,6 @@ static int usb_hid_report_set(uint8_t key) {
   return -EBUSY;
 }
 
-// PS CHECK
 static int usb_hid_report_clear(uint8_t key) {
   uint8_t ctrl_mask = button_ctrl_code(key);
 
