@@ -890,7 +890,7 @@ static void fg_update_handler(struct k_work *work) {
   uint8_t battery_level = (uint8_t)fuel_gauge_update(charger, vbus_connected);
   bt_bas_set_battery_level(battery_level);
 
-  if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
+  if (atomic_get(&nRF_mode) == WIRELESS_MODE && (conn_mode[0].conn != NULL)) {
     k_work_schedule(&fg_update, K_SECONDS(60));
   } else {
     atomic_set(&fg_wait, false);
