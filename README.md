@@ -24,7 +24,7 @@
 - <a href="https://www.linkedin.com/in/aslan-hepdogru-p-eng-7158011b/">*Aslan Hepdogru*</a>, <a href="https://www.linkedin.com/in/mathols/">*Mathias Olsen*</a>, and *Mihai Zaharia* for reviewing my keyboard design. 
 - <a href="https://www.linkedin.com/company/nordic-semiconductor/">*Nordic Semiconductor community*</a> for supporting the system on chip (SoC) and firmware development.
 - <a href="https://www.linkedin.com/company/the-zephyr-project/">*Zephyr community*</a> for supporting the firmware development.
--  <a href="https://www.linkedin.com/company/segger-microcontroller/">*Segger*</a> for their debugger, J-Link EDU Mini, that were designed for students in mind. 
+-  <a href="https://www.linkedin.com/company/segger-microcontroller/">*Segger*</a> for their debugger, J-Link EDU Mini, that was designed for students in mind. 
 - <a href="https://www.linkedin.com/in/joe-leonetti-b348508/">*Joe Leonetti*</a> and <a href="https://www.linkedin.com/company/rlx-solutions-inc./">*RLX Solutions*</a> for manufacturing my keyboard’s PCB. 
 
 
