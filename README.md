@@ -1,6 +1,6 @@
 # Custom Bluetooth Keyboard: Leopold FC750R
 
-🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth Keyboard's schematic and PCB layout, assembled the keyboard, and tested the complete system. 
+🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth Keyboard's schematic and printed circuit board (PCB) layout, assembled the keyboard, and tested the complete system. 
 
 "*Add the main picture here*"
 
@@ -25,7 +25,7 @@
 - <a href="https://www.linkedin.com/company/nordic-semiconductor/">*Nordic Semiconductor community*</a> for supporting the system on chip (SoC) and firmware development.
 - <a href="https://www.linkedin.com/company/the-zephyr-project/">*Zephyr community*</a> for supporting the firmware development.
 -  <a href="https://www.linkedin.com/company/segger-microcontroller/">*Segger*</a> for their debugger, J-Link EDU Mini, that were designed for students in mind. 
-- <a href="https://www.linkedin.com/in/joe-leonetti-b348508/">*Joe Leonetti*</a> and <a href="https://www.linkedin.com/company/rlx-solutions-inc./">*RLX Solutions*</a> for manufacturing my keyboard’s printed circuit board (PCB). 
+- <a href="https://www.linkedin.com/in/joe-leonetti-b348508/">*Joe Leonetti*</a> and <a href="https://www.linkedin.com/company/rlx-solutions-inc./">*RLX Solutions*</a> for manufacturing my keyboard’s PCB. 
 
 
 ## ⚠️ Copyright Notice
