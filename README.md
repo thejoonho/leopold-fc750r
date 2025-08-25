@@ -24,7 +24,7 @@
 - <a href="https://www.linkedin.com/in/aslan-hepdogru-p-eng-7158011b/">*Aslan Hepdogru*</a> and <a href="https://www.linkedin.com/in/mathols/">*Mathias Olsen*</a> for reviewing my keyboard design. 
 - <a href="https://www.linkedin.com/in/seanvhum/">*Prof. Sean Hum*</a> for supporting the system on chip (SoC) development.
 - *Mihai Zaharia* for providing resources for prototyping. 
-- <a href="https://www.linkedin.com/in/joe-leonetti-b348508/">*Joe Leonetti*</a> and <a href="https://www.linkedin.com/company/rlx-solutions-inc./">*RLX Solutions*</a> for manufacturing my keyboard’s PCB. 
+- <a href="https://www.linkedin.com/in/joe-leonetti-b348508/">*Joe Leonetti*</a> and <a href="https://www.linkedin.com/company/rlx-solutions-inc./">*RLX Solutions*</a> for fabricating my keyboard’s PCB. 
 
 ## ⚠️ Copyright Notice
 
