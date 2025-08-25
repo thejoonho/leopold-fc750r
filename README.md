@@ -15,7 +15,7 @@
 
 "*Add the video here*"
 
-### 🎬 Firmware Development Demo 
+### 🎬 Custom Bluetooth Keyboard: Prototype Demo
 
 "*Add the video here*"
 
