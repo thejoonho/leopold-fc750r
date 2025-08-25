@@ -11,11 +11,11 @@
 - <a href="https://docs.google.com/document/d/1T1kuHEfLhl1W9Vp5NQ1bjV8UXPvdlBXKJn0wyxQ07zg/edit?usp=sharing">Project Documentation</a>
 
 
-### 🎬 Custom Bluetooth Keyboard: Leopold FC750R 
+### 🎬 Custom Bluetooth Keyboard: Leopold FC750R (Official Demo) 
 
 "*Add the video here*"
 
-### 🎬 Custom Bluetooth Keyboard: Prototype Demo
+### 🎬 Custom Bluetooth Keyboard: Leopold FC750R (Prototype Demo) 
 
 "*Add the video here*"
 
