@@ -15,7 +15,7 @@
 
 "*Add the video here*"
 
-### 🎬 Custom Bluetooth Keyboard: Leopold FC750R (Prototype Demo) 
+### 🎬 Behind the Scenes | Custom Bluetooth Keyboard: Leopold FC750R (Prototype Demo) 
 
 "*Add the video here*"
 
