@@ -15,10 +15,6 @@
 
 "*Add the video here*"
 
-### 🎬 Behind the Scenes | Custom Bluetooth Keyboard: Leopold FC750R (Prototype Demo) 
-
-"*Add the video here*"
-
 ## 💐 Acknowledgements
 
 - <a href="https://www.linkedin.com/in/aslan-hepdogru-p-eng-7158011b/">*Aslan Hepdogru*</a> and <a href="https://www.linkedin.com/in/mathols/">*Mathias Olsen*</a> for reviewing my keyboard design. 
