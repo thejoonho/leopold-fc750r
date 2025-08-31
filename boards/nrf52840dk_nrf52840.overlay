@@ -225,7 +225,7 @@
                 MATRIX_KEY(5, 2, INPUT_KEY_LEFTALT)
                 MATRIX_KEY(5, 3, INPUT_KEY_SPACE)
                 MATRIX_KEY(5, 8, INPUT_KEY_RIGHTALT)
-                MATRIX_KEY(5, 9, INPUT_KEY_FN)
+                // MATRIX_KEY(5, 9, INPUT_KEY_FN)
                 MATRIX_KEY(5, 10, INPUT_KEY_MENU)
                 MATRIX_KEY(5, 13, INPUT_KEY_RIGHTCTRL)
                 MATRIX_KEY(5, 15, INPUT_KEY_LEFT)
