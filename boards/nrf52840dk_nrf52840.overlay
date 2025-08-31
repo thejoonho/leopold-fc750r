@@ -97,10 +97,8 @@
     };
 };
 
-
-/** TASK: CHANGE THE gpio1 12 0 to P0.05 */
 &npm1300_ek_pmic {
-    host-int-gpios = <&gpio1 12 0>;
+    host-int-gpios = <&gpio0 5 0>;
     pmic-int-pin = <1>;
 
 };
@@ -111,14 +109,30 @@
             compatible = "gpio-kbd-matrix";
 
             row-gpios = <&gpio1 4 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>,
-                        <&gpio1 5 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+                        <&gpio1 5 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>,
+                        <&gpio1 2 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>,
+                        <&gpio0 7 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>,
+                        <&gpio0 2 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>,
+                        <&gpio1 14 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>; 
 
             col-gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>,
                         <&gpio0 29 GPIO_ACTIVE_HIGH>,
                         <&gpio0 28 GPIO_ACTIVE_HIGH>,
                         <&gpio0 31 GPIO_ACTIVE_HIGH>,
                         <&gpio0 30 GPIO_ACTIVE_HIGH>,
-                        <&gpio1 8 GPIO_ACTIVE_HIGH>;
+                        <&gpio1 8 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 11 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 6 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 8 GPIO_ACTIVE_HIGH>,
+                        <&gpio1 9 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 12 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 14 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 16 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 13 GPIO_ACTIVE_HIGH>,
+                        <&gpio0 15 GPIO_ACTIVE_HIGH>,
+                        <&gpio1 3 GPIO_ACTIVE_HIGH>,
+                        <&gpio1 7 GPIO_ACTIVE_HIGH>,
+                        <&gpio1 6 GPIO_ACTIVE_HIGH>;
 
             keymap {
                 compatible = "input-keymap";
@@ -246,6 +260,7 @@
         /delete-property/ bootloader-led0;
         /delete-property/ mcuboot-button0;
         /delete-property/ mcuboot-led0;
+        /delete-property/ pwm-led0;
     };
 };
 
@@ -289,7 +304,16 @@
 };
 
 // Delete from DeviceTree Extension Nodes Folder
+/delete-node/ &led0;
+/delete-node/ &led1;
+/delete-node/ &led2;
+/delete-node/ &led3;
 /delete-node/ &{/leds/};
+
+/delete-node/ &button0;
+/delete-node/ &button1;
+/delete-node/ &button2;
+/delete-node/ &button3;
 /delete-node/ &{/buttons/};
 
 &clock {
@@ -312,8 +336,20 @@
     status = "disabled";
 };
 
+&uart0 {
+    status = "disabled";
+};
+
+&pwm0 {
+    status = "disabled";
+};
 
 // Do not delete from DeviceTree Visual Editor (View Mode: Pins). Example shown below:
 // &button0 {
     //     /delete-property/ gpios;
 // };
+&arduino_adc {
+    io-channel-map = <0 &adc 1>, <1 &adc 2>, <2 &adc 4>, <3 &adc 5>, <4 &adc 6>, <5 &adc 7>;
+};
+
+
