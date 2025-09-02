@@ -3,6 +3,8 @@
  * Copyright (c) 2025, 2024, 2018 Nordic Semiconductor ASA
  * Copyright (c) 2024 BayLibre SAS
  * Copyright (c) 2018 Laczen
+ * Copyright (c) 2018 Intel Corporation
+ * Copyright (c) 2017 Linaro Limited
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  * SPDX-License-Identifier: Apache-2.0
@@ -30,9 +32,11 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/led_strip.h>
 #include <zephyr/drivers/mfd/npm1300.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/drivers/sensor/npm1300_charger.h>
+#include <zephyr/drivers/spi.h>
 #include <zephyr/fs/zms.h>
 #include <zephyr/input/input.h>
 #include <zephyr/input/input_hid.h>
@@ -514,8 +518,29 @@ static int usb_hid_report_set(uint8_t key);
 static int usb_hid_report_clear(uint8_t key);
 
 ////////////////////////////////////////////////////////////////////////
-//                              RGB LED                               //
+//                              RGB LEDs                              //
 ////////////////////////////////////////////////////////////////////////
+
+#define STRIP_NODE DT_ALIAS(led_strip)
+
+#if DT_NODE_HAS_PROP(DT_ALIAS(led_strip), chain_length)
+#define STRIP_NUM_PIXELS DT_PROP(DT_ALIAS(led_strip), chain_length)
+#else
+#error Unable to determine length of LED strip
+#endif
+
+#define DELAY_TIME K_MSEC(CONFIG_SAMPLE_LED_UPDATE_DELAY)
+
+#define RGB(_r, _g, _b) {.r = (_r), .g = (_g), .b = (_b)}
+
+static const struct led_rgb colors[] = {
+    RGB(0x0f, 0x00, 0x00), /* red */
+    RGB(0x00, 0x0f, 0x00), /* green */
+    RGB(0x00, 0x00, 0x0f), /* blue */
+};
+
+static struct led_rgb pixels[STRIP_NUM_PIXELS];
+static const struct device *const strip = DEVICE_DT_GET(STRIP_NODE);
 
 ////////////////////////////////////////////////////////////////////////
 //                                 MAIN                               //
