@@ -36,7 +36,6 @@
 #include <zephyr/drivers/mfd/npm1300.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/drivers/sensor/npm1300_charger.h>
-#include <zephyr/drivers/spi.h>
 #include <zephyr/fs/zms.h>
 #include <zephyr/input/input.h>
 #include <zephyr/input/input_hid.h>
@@ -803,6 +802,62 @@ int main(void) {
   }
 
   LOG_INF("USB Settings Setup Complete");
+
+  // RGB LEDS SETUP
+  printk("\n\x1b[32m\x1b[1mRGB LEDs Setup:\x1b[39m\x1b[0m\n");
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t color = 1;
+
+  if (device_is_ready(strip) != 1) {
+    LOG_ERR("LED strip device %s is not ready", strip->name);
+    return 1;
+  } else {
+    LOG_INF("Found LED strip device %s", strip->name);
+  }
+
+  LOG_INF("Displaying pattern on strip");
+
+  size_t cursor = 0;
+
+  while (cursor < 87) {
+    /**
+     * strip - connected LEDs
+     * pixels[i] - the pixels index contain the color it'll have
+     * colors[i] - the color index contain the color (RGB)
+     *
+     */
+
+    memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
+
+    rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+    if (rc) {
+      LOG_ERR("couldn't update strip: %d", rc);
+    }
+
+    k_sleep(DELAY_TIME);
+
+	cursor++; 
+
+    // for (size_t cursor = 0; cursor < ARRAY_SIZE(pixels); cursor++) {
+    //   memset(&pixels, 0x00, sizeof(pixels));
+    //   memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
+
+    //   rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+    //   if (rc) {
+    //     LOG_ERR("couldn't update strip: %d", rc);
+    //   }
+
+    //   k_sleep(DELAY_TIME);
+    // }
+
+    // color = (color + 1) % ARRAY_SIZE(colors);
+  }
+
+  
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // LEOPOLD FC750R MECHANICAL SETUP
   printk("\n\x1b[32m\x1b[1mLeopold FC750R Mechanical Setup:\x1b[39m\x1b[0m\n");

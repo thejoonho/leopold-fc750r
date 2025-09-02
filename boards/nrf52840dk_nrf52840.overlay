@@ -43,7 +43,7 @@
                 regulator-init-microvolt = <1800000>;
                 retention-microvolt = <1500000>;
 
-                retention-gpios = <&npm1300_ek_gpio 0 GPIO_ACTIVE_HIGH>;
+                retention-gpios = <&npm1300_ek_gpio 0 GPIO_ACTIVE_LOW>;
             };
 
             npm1300_ek_buck2: BUCK2 {
@@ -312,10 +312,17 @@
             psels = <NRF_PSEL(I2S_SCK_M, 1, 15)>,
                     <NRF_PSEL(I2S_LRCK_M, 1, 12)>,
                     <NRF_PSEL(I2S_SDOUT, 0, 27)>,
-                    <NRF_PSEL(I2S_SDIN, 1, 14)>;
+                    <NRF_PSEL(I2S_SDIN, 1, 13)>;
         };
     };
 };
+
+&i2c0_sleep {
+    group1 {
+        psels = <NRF_PSEL(TWIM_SDA, 0, 26)>, <NRF_PSEL(TWIM_SCL, 0, 17)>;
+    };
+};
+
 
 i2s_led: &i2s0 {
     status = "okay";
@@ -383,12 +390,5 @@ i2s_led: &i2s0 {
 };
 
 &arduino_adc {
-    io-channel-map = <0 &adc 1>,
-                     <1 &adc 2>,
-                     <2 &adc 4>,
-                     <3 &adc 5>,
-                     <4 &adc 6>,
-                     <5 &adc 7>;
+    io-channel-map = <0 &adc 1>, <1 &adc 2>, <2 &adc 4>, <3 &adc 5>, <4 &adc 6>, <5 &adc 7>;
 };
-
-
