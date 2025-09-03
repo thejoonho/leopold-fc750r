@@ -474,9 +474,8 @@ static int key_report_send(void);
  *
  *  @return Mask of the control key or 0.
  */
-static uint8_t button_ctrl_code(uint8_t key);
-static int hid_kbd_state_key_set(uint8_t key);
-static int hid_kbd_state_key_clear(uint8_t key);
+static int hid_kbd_state_key_set(uint8_t key, bool mod_key);
+static int hid_kbd_state_key_clear(uint8_t key, bool mod_key);
 
 ////////////////////////////////////////////////////////////////////////
 //                             USB SETTINGS                           //
@@ -1389,12 +1388,13 @@ int main(void) {
       uint8_t key = input_to_hid_modifier(kb_evt.code);
       if (key == 0) {
         key = (uint8_t)input_to_hid_code(kb_evt.code);
+        mod_key = false;
       }
 
       if (kb_evt.value == 1) {
-        err = hid_kbd_state_key_set(key);
+        err = hid_kbd_state_key_set(key, mod_key);
       } else {
-        err = hid_kbd_state_key_clear(key);
+        err = hid_kbd_state_key_clear(key, mod_key);
       }
 
       if (err) {
@@ -2471,17 +2471,9 @@ static int key_report_send(void) {
   return 0;
 }
 
-static uint8_t button_ctrl_code(uint8_t key) {
-  if (KEY_CTRL_CODE_MIN <= key && key <= KEY_CTRL_CODE_MAX) {
-    return (uint8_t)(1U << (key - KEY_CTRL_CODE_MIN));
-  }
-  return 0;
-}
-
-static int hid_kbd_state_key_set(uint8_t key) {
-  uint8_t ctrl_mask = button_ctrl_code(key);
-
-  if (ctrl_mask) {
+static int hid_kbd_state_key_set(uint8_t key, bool mod_key) {
+  if (mod_key) {
+    uint8_t ctrl_mask = key;
     hid_keyboard_state.ctrl_keys_state |= ctrl_mask;
     return 0;
   }
@@ -2496,10 +2488,9 @@ static int hid_kbd_state_key_set(uint8_t key) {
   return -EBUSY;
 }
 
-static int hid_kbd_state_key_clear(uint8_t key) {
-  uint8_t ctrl_mask = button_ctrl_code(key);
-
-  if (ctrl_mask) {
+static int hid_kbd_state_key_clear(uint8_t key, bool mod_key) {
+  if (mod_key) {
+    uint8_t ctrl_mask = key;
     hid_keyboard_state.ctrl_keys_state &= ~ctrl_mask;
     return 0;
   }
