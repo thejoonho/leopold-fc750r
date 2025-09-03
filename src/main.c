@@ -533,8 +533,8 @@ struct hid_device_ops kb_ops = {
 /* doc device msg-cb start */
 static void msg_cb(struct usbd_context *const usbd_ctx,
                    const struct usbd_msg *const msg);
-static int usb_hid_report_set(uint8_t key);
-static int usb_hid_report_clear(uint8_t key);
+static int usb_hid_report_set(uint8_t key, bool mod_key);
+static int usb_hid_report_clear(uint8_t key, bool mod_key);
 
 ////////////////////////////////////////////////////////////////////////
 //                              RGB LEDs                              //
@@ -1333,6 +1333,7 @@ int main(void) {
 
   while (true) {
     struct kb_event kb_evt;
+    bool mod_key = true;
 
     k_msgq_get(&kb_msgq, &kb_evt, K_FOREVER);
 
@@ -1348,12 +1349,13 @@ int main(void) {
       uint8_t key = input_to_hid_modifier(kb_evt.code);
       if (key == 0) {
         key = (uint8_t)input_to_hid_code(kb_evt.code);
+        mod_key = false;
       }
 
       if (kb_evt.value == 1) {
-        err = usb_hid_report_set(key);
+        err = usb_hid_report_set(key, mod_key);
       } else {
-        err = usb_hid_report_clear(key);
+        err = usb_hid_report_clear(key, mod_key);
       }
 
       if (err) {
@@ -1575,6 +1577,23 @@ static void key_pressed(struct input_event *evt, void *user_data) {
       if (kb_evt.value == 1) {
         atomic_set(&nRF_mode, WIRED_MODE);
         LOG_INF("Keyboard is in WIRED MODE");
+
+        // Stop any BLE activities
+        err = bt_le_adv_stop();
+        if (err) {
+          LOG_WRN("Did not stop any ongoing BLE advertising");
+          return;
+        } else {
+          LOG_INF("Stopped any ongoing BLE advertising");
+        }
+
+        if (conn_mode[0].conn != NULL) {
+          bt_conn_disconnect(conn_mode[0].conn,
+                             BT_HCI_ERR_REMOTE_USER_TERM_CONN);
+          LOG_INF("Process of disconnecting from current connection...");
+          return;
+        }
+
       } else {
         atomic_set(&nRF_mode, WIRELESS_MODE);
         LOG_INF("Keyboard is in WIRELESS MODE");
@@ -2564,10 +2583,9 @@ static void msg_cb(struct usbd_context *const usbd_ctx,
   }
 }
 
-static int usb_hid_report_set(uint8_t key) {
-  uint8_t ctrl_mask = button_ctrl_code(key);
-
-  if (ctrl_mask) {
+static int usb_hid_report_set(uint8_t key, bool mod_key) {
+  if (mod_key) {
+    uint8_t ctrl_mask = key;
     report[KB_MOD_KEY] |= ctrl_mask;
     report[KB_RESERVED] = 0;
     return 0;
@@ -2585,10 +2603,9 @@ static int usb_hid_report_set(uint8_t key) {
   return -EBUSY;
 }
 
-static int usb_hid_report_clear(uint8_t key) {
-  uint8_t ctrl_mask = button_ctrl_code(key);
-
-  if (ctrl_mask) {
+static int usb_hid_report_clear(uint8_t key, bool mod_key) {
+  if (mod_key) {
+    uint8_t ctrl_mask = key;
     report[KB_MOD_KEY] &= ~ctrl_mask;
     report[KB_RESERVED] = 0;
     return 0;

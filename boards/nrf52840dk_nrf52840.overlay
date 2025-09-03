@@ -148,7 +148,7 @@
                 MATRIX_KEY(0, 7, INPUT_KEY_F5)
                 MATRIX_KEY(0, 8, INPUT_KEY_F6)
                 MATRIX_KEY(0, 9, INPUT_KEY_F7)
-                MATRIX_KEY(0, 10, INPUT_KEY_8)
+                MATRIX_KEY(0, 10, INPUT_KEY_F8)
                 MATRIX_KEY(0, 11, INPUT_KEY_F9)
                 MATRIX_KEY(0, 12, INPUT_KEY_F10)
                 MATRIX_KEY(0, 13, INPUT_KEY_F11)
@@ -390,5 +390,10 @@ i2s_led: &i2s0 {
 };
 
 &arduino_adc {
-    io-channel-map = <0 &adc 1>, <1 &adc 2>, <2 &adc 4>, <3 &adc 5>, <4 &adc 6>, <5 &adc 7>;
+    io-channel-map = <0 &adc 1>,
+                     <1 &adc 2>,
+                     <2 &adc 4>,
+                     <3 &adc 5>,
+                     <4 &adc 6>,
+                     <5 &adc 7>;
 };
