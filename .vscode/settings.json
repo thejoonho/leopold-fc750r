@@ -10,6 +10,7 @@
         "flash.h": "c",
         "dis.h": "c",
         "thread_stack.h": "c",
-        "settings.h": "c"
+        "settings.h": "c",
+        "*.file": "c"
     }
 }

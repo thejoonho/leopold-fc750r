@@ -132,6 +132,17 @@ static void event_callback(const struct device *dev, struct gpio_callback *cb,
 //                        SETTINGS FLASH STORAGE                      //
 ////////////////////////////////////////////////////////////////////////
 
+#define FN_MODE 1
+#define MULTIMEDIA_MODE 0
+
+#define RGB_OFF 0
+#define RGB_MODE1 1
+#define RGB_MODE2 2
+#define RGB_MODE3 3
+#define RGB_MODE4 4
+#define RGB_MODE5 5
+#define RGB_MODE6 6
+
 /**
  * @note ZMS Structure
  * leopold_fc750r
@@ -139,6 +150,8 @@ static void event_callback(const struct device *dev, struct gpio_callback *cb,
  *   |_ central1_addr [1]
  *   |_ central2_addr [2]
  *   |_ central3_addr [3]
+ *   |_ fn_mode
+ *   |_ rgb_mode
  */
 
 static int current_central = 1;
@@ -148,10 +161,15 @@ static bt_addr_le_t central3_addr = {0};
 
 static const bt_addr_le_t clean_addr = {0};
 
+static bool fn_mode = FN_MODE;
+static int rgb_mode = RGB_OFF;
+
 /** @brief leopold_fc750R_handle_set
  *
  * @note Initializes the current_central, central_addr, central2_addr, and
  * central3_addr with the stored value.
+ *
+ * @note Intializes the fn_mode and rgb_mode as well.
  */
 int leopold_fc750R_handle_set(const char *name, size_t len,
                               settings_read_cb read_cb, void *cb_arg);
@@ -162,6 +180,8 @@ SETTINGS_STATIC_HANDLER_DEFINE(leopold_fc750R, "leopold_fc750R", NULL,
 ////////////////////////////////////////////////////////////////////////
 //                      KEYBOARD MATRIX SCANNING                      //
 ////////////////////////////////////////////////////////////////////////
+
+static bool fn_pressed = false;
 
 struct kb_event {
   uint16_t code;
@@ -532,14 +552,339 @@ static int usb_hid_report_clear(uint8_t key);
 
 #define RGB(_r, _g, _b) {.r = (_r), .g = (_g), .b = (_b)}
 
+/**
+ * @note The RGB values has be a sum of 15 or less for the RGB to update
+ * correctly.
+ */
 static const struct led_rgb colors[] = {
-    RGB(0x0f, 0x00, 0x00), /* red */
-    RGB(0x00, 0x0f, 0x00), /* green */
-    RGB(0x00, 0x00, 0x0f), /* blue */
+    RGB(0x00, 0x00, 0x00), /* off */
+    RGB(0x03, 0x03, 0x03), /* white */
+    RGB(0x00, 0x07, 0x08), /* torquoise */
+
+    // Rainbow
+    RGB(0x00, 0x07, 0x08), /* torquoise */
+    RGB(0x02, 0x04, 0x09), /* royal blue */
+    RGB(0x01, 0x02, 0x0c), /* dark blue */
+    RGB(0x02, 0x00, 0x0d), /* dark dark blue */
+    RGB(0x04, 0x00, 0x0b), /* dark purple */
+    RGB(0x04, 0x01, 0x0a), /* purple */
+    RGB(0x05, 0x01, 0x09), /* purple - pink */
+    RGB(0x07, 0x00, 0x08), /* pink */
+    RGB(0x09, 0x00, 0x06), /* bright pink */
+    RGB(0x0b, 0x00, 0x04), /* pink - red  */
+    RGB(0x0d, 0x00, 0x02), /* light red  */
+    RGB(0x0e, 0x00, 0x01), /* red  */
+    RGB(0x0f, 0x00, 0x00), /* dark red  */
+    RGB(0x0e, 0x01, 0x00), /* tangerine  */
+    RGB(0x0c, 0x03, 0x00), /* organge  */
+    RGB(0x0a, 0x05, 0x00), /* organge - yellow  */
+    RGB(0x06, 0x09, 0x00), /* yellow - green */
+    RGB(0x01, 0x0e, 0x00), /*  green */
+
 };
 
 static struct led_rgb pixels[STRIP_NUM_PIXELS];
 static const struct device *const strip = DEVICE_DT_GET(STRIP_NODE);
+
+static void update_rgb_rainbow(void) {
+  int rc;
+  size_t cursor = 0;
+
+  while (cursor < 87) {
+    memcpy(&pixels[cursor], &colors[0], sizeof(struct led_rgb));
+    cursor++;
+  }
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[72 - 1], &colors[3], sizeof(struct led_rgb));
+  memcpy(&pixels[71 - 1], &colors[3], sizeof(struct led_rgb));
+  memcpy(&pixels[38 - 1], &colors[3], sizeof(struct led_rgb));
+  memcpy(&pixels[37 - 1], &colors[3], sizeof(struct led_rgb));
+  memcpy(&pixels[12 - 1], &colors[3], sizeof(struct led_rgb));
+  memcpy(&pixels[11 - 1], &colors[3], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[70 - 1], &colors[4], sizeof(struct led_rgb));
+  memcpy(&pixels[39 - 1], &colors[4], sizeof(struct led_rgb));
+  memcpy(&pixels[36 - 1], &colors[4], sizeof(struct led_rgb));
+  memcpy(&pixels[37 - 1], &colors[4], sizeof(struct led_rgb));
+  memcpy(&pixels[10 - 1], &colors[4], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[73 - 1], &colors[5], sizeof(struct led_rgb));
+  memcpy(&pixels[35 - 1], &colors[5], sizeof(struct led_rgb));
+  memcpy(&pixels[69 - 1], &colors[5], sizeof(struct led_rgb));
+  memcpy(&pixels[40 - 1], &colors[5], sizeof(struct led_rgb));
+  memcpy(&pixels[14 - 1], &colors[5], sizeof(struct led_rgb));
+  memcpy(&pixels[13 - 1], &colors[5], sizeof(struct led_rgb));
+  memcpy(&pixels[9 - 1], &colors[5], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[74 - 1], &colors[6], sizeof(struct led_rgb));
+  memcpy(&pixels[75 - 1], &colors[6], sizeof(struct led_rgb));
+  memcpy(&pixels[68 - 1], &colors[6], sizeof(struct led_rgb));
+  memcpy(&pixels[41 - 1], &colors[6], sizeof(struct led_rgb));
+  memcpy(&pixels[34 - 1], &colors[6], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[67 - 1], &colors[7], sizeof(struct led_rgb));
+  memcpy(&pixels[15 - 1], &colors[7], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[76 - 1], &colors[8], sizeof(struct led_rgb));
+  memcpy(&pixels[66 - 1], &colors[8], sizeof(struct led_rgb));
+  memcpy(&pixels[42 - 1], &colors[8], sizeof(struct led_rgb));
+  memcpy(&pixels[33 - 1], &colors[8], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[43 - 1], &colors[9], sizeof(struct led_rgb));
+  memcpy(&pixels[32 - 1], &colors[9], sizeof(struct led_rgb));
+  memcpy(&pixels[16 - 1], &colors[9], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[77 - 1], &colors[10], sizeof(struct led_rgb));
+  memcpy(&pixels[65 - 1], &colors[10], sizeof(struct led_rgb));
+  memcpy(&pixels[44 - 1], &colors[10], sizeof(struct led_rgb));
+  memcpy(&pixels[31 - 1], &colors[10], sizeof(struct led_rgb));
+  memcpy(&pixels[17 - 1], &colors[10], sizeof(struct led_rgb));
+  memcpy(&pixels[8 - 1], &colors[10], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[78 - 1], &colors[11], sizeof(struct led_rgb));
+  memcpy(&pixels[64 - 1], &colors[11], sizeof(struct led_rgb));
+  memcpy(&pixels[45 - 1], &colors[11], sizeof(struct led_rgb));
+  memcpy(&pixels[30 - 1], &colors[11], sizeof(struct led_rgb));
+  memcpy(&pixels[18 - 1], &colors[11], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[79 - 1], &colors[12], sizeof(struct led_rgb));
+  memcpy(&pixels[63 - 1], &colors[12], sizeof(struct led_rgb));
+  memcpy(&pixels[46 - 1], &colors[12], sizeof(struct led_rgb));
+  memcpy(&pixels[29 - 1], &colors[12], sizeof(struct led_rgb));
+  memcpy(&pixels[19 - 1], &colors[12], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[80 - 1], &colors[13], sizeof(struct led_rgb));
+  memcpy(&pixels[62 - 1], &colors[13], sizeof(struct led_rgb));
+  memcpy(&pixels[47 - 1], &colors[13], sizeof(struct led_rgb));
+  memcpy(&pixels[28 - 1], &colors[13], sizeof(struct led_rgb));
+  memcpy(&pixels[20 - 1], &colors[13], sizeof(struct led_rgb));
+  memcpy(&pixels[21 - 1], &colors[13], sizeof(struct led_rgb));
+  memcpy(&pixels[7 - 1], &colors[13], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[61 - 1], &colors[14], sizeof(struct led_rgb));
+  memcpy(&pixels[48 - 1], &colors[14], sizeof(struct led_rgb));
+  memcpy(&pixels[27 - 1], &colors[14], sizeof(struct led_rgb));
+  memcpy(&pixels[22 - 1], &colors[14], sizeof(struct led_rgb));
+  memcpy(&pixels[6 - 1], &colors[14], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[81 - 1], &colors[15], sizeof(struct led_rgb));
+  memcpy(&pixels[60 - 1], &colors[15], sizeof(struct led_rgb));
+  memcpy(&pixels[49 - 1], &colors[15], sizeof(struct led_rgb));
+  memcpy(&pixels[26 - 1], &colors[15], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[82 - 1], &colors[16], sizeof(struct led_rgb));
+  memcpy(&pixels[59 - 1], &colors[16], sizeof(struct led_rgb));
+  memcpy(&pixels[50 - 1], &colors[16], sizeof(struct led_rgb));
+  memcpy(&pixels[5 - 1], &colors[16], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[83 - 1], &colors[17], sizeof(struct led_rgb));
+  memcpy(&pixels[84 - 1], &colors[17], sizeof(struct led_rgb));
+  memcpy(&pixels[58 - 1], &colors[17], sizeof(struct led_rgb));
+  memcpy(&pixels[51 - 1], &colors[17], sizeof(struct led_rgb));
+  memcpy(&pixels[25 - 1], &colors[17], sizeof(struct led_rgb));
+  memcpy(&pixels[23 - 1], &colors[17], sizeof(struct led_rgb));
+  memcpy(&pixels[4 - 1], &colors[17], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[85 - 1], &colors[18], sizeof(struct led_rgb));
+  memcpy(&pixels[57 - 1], &colors[18], sizeof(struct led_rgb));
+  memcpy(&pixels[52 - 1], &colors[18], sizeof(struct led_rgb));
+  memcpy(&pixels[3 - 1], &colors[18], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[86 - 1], &colors[19], sizeof(struct led_rgb));
+  memcpy(&pixels[56 - 1], &colors[19], sizeof(struct led_rgb));
+  memcpy(&pixels[53 - 1], &colors[19], sizeof(struct led_rgb));
+  memcpy(&pixels[24 - 1], &colors[19], sizeof(struct led_rgb));
+  memcpy(&pixels[2 - 1], &colors[19], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[87 - 1], &colors[20], sizeof(struct led_rgb));
+  memcpy(&pixels[55 - 1], &colors[20], sizeof(struct led_rgb));
+  memcpy(&pixels[54 - 1], &colors[20], sizeof(struct led_rgb));
+  memcpy(&pixels[1 - 1], &colors[20], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+}
+static void update_rgb_valentine(void){}
+static void update_rgb_halloween(void){}
+static void update_rgb_christmas(void){}  // Add the cool animations
+
+static void update_rgb(void) {
+  int rc;
+  size_t cursor = 0;
+  size_t color = 0;
+
+  /**
+   * strip - connected LEDs
+   * pixels[i] - the pixels index contain the color it'll have
+   * colors[i] - the color index contain the color (RGB)
+   */
+
+  LOG_INF("Displaying RGB Mode %d", rgb_mode);
+
+  // Solid Colours
+  if (rgb_mode == 0) {  // Off (slap)
+    color = 0;
+  } else if (rgb_mode == 1) {  // White (slap)
+    color = 1;
+  } else if (rgb_mode == 2) {  // Turquoise (slap)
+    color = 2;
+  } else if (rgb_mode == 3) {  // Rainbow (left to right animation )
+    update_rgb_rainbow();
+    return;
+
+  } else if (rgb_mode == 4) {  // Valentine (heart shape and expand)
+    update_rgb_valentine();
+    return;
+
+  } else if (rgb_mode == 5) {  // Halloween (Pause... slap)
+    update_rgb_halloween();
+    return;
+
+  } else if (rgb_mode == 6) {  // Christmas (Top to bottom)
+    update_rgb_christmas();
+    return;
+  }
+
+  while (cursor < 87) {
+    memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
+    cursor++;
+  }
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+}
 
 ////////////////////////////////////////////////////////////////////////
 //                                 MAIN                               //
@@ -698,6 +1043,9 @@ int main(void) {
   }
   identity_count = CONFIG_BT_ID_MAX;
 
+  fn_mode = FN_MODE;
+  rgb_mode = RGB_OFF;
+
   if (IS_ENABLED(CONFIG_SETTINGS)) {
     if (settings_load() != 0) {
       LOG_ERR("Settings failed to load");
@@ -807,9 +1155,6 @@ int main(void) {
   printk("\n\x1b[32m\x1b[1mRGB LEDs Setup:\x1b[39m\x1b[0m\n");
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  size_t color = 1;
-
   if (device_is_ready(strip) != 1) {
     LOG_ERR("LED strip device %s is not ready", strip->name);
     return 1;
@@ -817,50 +1162,15 @@ int main(void) {
     LOG_INF("Found LED strip device %s", strip->name);
   }
 
-  LOG_INF("Displaying pattern on strip");
-
-  size_t cursor = 0;
-
-  while (cursor < 87) {
-    /**
-     * strip - connected LEDs
-     * pixels[i] - the pixels index contain the color it'll have
-     * colors[i] - the color index contain the color (RGB)
-     *
-     */
-
-    memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
-
-    rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
-    if (rc) {
-      LOG_ERR("couldn't update strip: %d", rc);
-    }
-
-    k_sleep(DELAY_TIME);
-
-	cursor++; 
-
-    // for (size_t cursor = 0; cursor < ARRAY_SIZE(pixels); cursor++) {
-    //   memset(&pixels, 0x00, sizeof(pixels));
-    //   memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
-
-    //   rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
-    //   if (rc) {
-    //     LOG_ERR("couldn't update strip: %d", rc);
-    //   }
-
-    //   k_sleep(DELAY_TIME);
-    // }
-
-    // color = (color + 1) % ARRAY_SIZE(colors);
-  }
-
-  
+  update_rgb();
+  LOG_INF("RGB LEDs Setup Complete");
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // LEOPOLD FC750R MECHANICAL SETUP
   printk("\n\x1b[32m\x1b[1mLeopold FC750R Mechanical Setup:\x1b[39m\x1b[0m\n");
+
+  fn_pressed = false;
 
   if (gpio_pin_get_dt(&dip2) == 1) {
     atomic_set(&nRF_mode, WIRED_MODE);
@@ -1090,6 +1400,16 @@ int leopold_fc750R_handle_set(const char *name, size_t len,
       err = read_cb(cb_arg, &central3_addr, sizeof(central3_addr));
       return 0;
     }
+
+    if (!strncmp(name, "fn_mode", name_len)) {
+      err = read_cb(cb_arg, &fn_mode, sizeof(fn_mode));
+      return 0;
+    }
+
+    if (!strncmp(name, "rgb_mode", name_len)) {
+      err = read_cb(cb_arg, &rgb_mode, sizeof(rgb_mode));
+      return 0;
+    }
   }
   return -ENOENT;
 }
@@ -1148,6 +1468,99 @@ static void key_pressed(struct input_event *evt, void *user_data) {
         return;
       }
     }
+
+    // FN KEY PRESSED/RELEASED
+    if (kb_evt.code == INPUT_BTN_0) {
+      if (kb_evt.value == 1) {
+        fn_pressed = true;
+      } else {
+        fn_pressed = false;
+      }
+      return;
+    }
+
+    // FN KEY COMMANDS
+    if (fn_pressed) {
+      // check for the fn + space first
+
+      if ((kb_evt.code == INPUT_KEY_0) && (kb_evt.value == 1)) {
+        rgb_mode = 0;
+        update_rgb();
+      }
+
+      if ((kb_evt.code == INPUT_KEY_1) && (kb_evt.value == 1)) {
+        rgb_mode = 1;
+        update_rgb();
+      }
+
+      if ((kb_evt.code == INPUT_KEY_2) && (kb_evt.value == 1)) {
+        rgb_mode = 2;
+        update_rgb();
+      }
+
+      if ((kb_evt.code == INPUT_KEY_3) && (kb_evt.value == 1)) {
+        rgb_mode = 3;
+        update_rgb();
+      }
+
+      if ((kb_evt.code == INPUT_KEY_4) && (kb_evt.value == 1)) {
+        rgb_mode = 4;
+        update_rgb();
+      }
+
+      if ((kb_evt.code == INPUT_KEY_5) && (kb_evt.value == 1)) {
+        rgb_mode = 4;
+        update_rgb();
+      }
+
+      if ((kb_evt.code == INPUT_KEY_6) && (kb_evt.value == 1)) {
+        rgb_mode = 6;
+        update_rgb();
+      }
+
+      // Save the RGB Mode
+      err = settings_save_one("leopold_fc750R/rgb_mode",
+                              (const void *)&rgb_mode, sizeof(rgb_mode));
+      if (err) {
+        LOG_WRN("rgb_mode was not saved to the flash storage (err %d)", err);
+      } else {
+        LOG_INF("rgb_mode = %d was saved to the flash storage", rgb_mode);
+      }
+      return;
+    }
+
+    // REROUTE KEYS
+    /**
+     * if (fn_pressed = true)
+     *
+     * FN + Space = Switch FN_Mode
+     *  |_ Save FN_MODE to ZMS
+     *  |_ return
+     * return
+     *
+     * Do the RGB Stuff
+     *
+     */
+
+    // CHANGE FN KEYS/MULTIMEDIA KEYS BASED ON FN_MODE
+    /**
+     * if(fn_pressed = true)
+     *    |_ if (FN_MODE = FN_KEYS)
+     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
+     *      |_ etc. skip
+     *  |_ if (FN_MODE = MULTIMEDEIA Keys)
+     *      |_ INPUT_KEY_F1
+     *      |_ etc. skip
+     *
+     *  if(fn_pressed = false)
+     *    |_ if (FN_MODE = FN_KEYS)
+     *      |_ INPUT_KEY_F1
+     *      |_ etc. skip
+     *  |_ if (FN_MODE = MULTIMEDEIA Keys )
+     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
+     *      |_ etc. skip
+     *
+     */
 
     // REGISTER USER KEY PRESS
     if (!atomic_get(&enable_passkey_input)) {
