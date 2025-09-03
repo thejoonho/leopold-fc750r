@@ -579,8 +579,12 @@ static const struct led_rgb colors[] = {
     RGB(0x0c, 0x03, 0x00), /* organge  */
     RGB(0x0a, 0x05, 0x00), /* organge - yellow  */
     RGB(0x06, 0x09, 0x00), /* yellow - green */
-    RGB(0x01, 0x0e, 0x00), /*  green */
+    RGB(0x01, 0x0e, 0x00), /*  green  */
 
+    // Christmas
+    RGB(0x05, 0x05, 0x05), /* white */
+    RGB(0x0f, 0x00, 0x00), /* red */
+    RGB(0x08, 0x0f, 0x00), /* green */
 };
 
 static struct led_rgb pixels[STRIP_NUM_PIXELS];
@@ -834,9 +838,156 @@ static void update_rgb_rainbow(void) {
 
   k_sleep(DELAY_TIME);
 }
-static void update_rgb_valentine(void){}
-static void update_rgb_halloween(void){}
-static void update_rgb_christmas(void){}  // Add the cool animations
+static void update_rgb_christmas(void) {
+  int rc;
+  size_t cursor = 0;
+
+  while (cursor < 87) {
+    memcpy(&pixels[cursor], &colors[0], sizeof(struct led_rgb));
+    cursor++;
+  }
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+
+  k_sleep(DELAY_TIME);
+
+  memcpy(&pixels[72 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[73 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[74 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[75 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[76 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[77 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[78 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[79 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[80 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[81 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[82 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[83 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[84 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[85 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[86 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[87 - 1], &colors[22], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+  k_sleep(K_MSEC(1000));
+
+  memcpy(&pixels[55 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[56 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[57 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[58 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[59 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[60 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[61 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[62 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[63 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[64 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[65 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[66 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[67 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[68 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[69 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[70 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[71 - 1], &colors[23], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+  k_sleep(K_MSEC(1000));
+
+  memcpy(&pixels[38 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[39 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[40 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[41 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[42 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[43 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[44 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[45 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[46 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[47 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[48 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[49 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[50 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[51 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[52 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[53 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[54 - 1], &colors[21], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+  k_sleep(K_MSEC(1000));
+
+  memcpy(&pixels[25 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[26 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[27 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[28 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[29 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[30 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[31 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[32 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[33 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[34 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[35 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[36 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[37 - 1], &colors[21], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+  k_sleep(K_MSEC(1000));
+
+  memcpy(&pixels[12 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[13 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[14 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[15 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[16 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[17 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[18 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[19 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[20 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[21 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[22 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[23 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[24 - 1], &colors[21], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+  k_sleep(K_MSEC(1000));
+
+  memcpy(&pixels[1 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[2 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[3 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[4 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[5 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[6 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[7 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[8 - 1], &colors[23], sizeof(struct led_rgb));
+  memcpy(&pixels[9 - 1], &colors[21], sizeof(struct led_rgb));
+  memcpy(&pixels[10 - 1], &colors[22], sizeof(struct led_rgb));
+  memcpy(&pixels[11 - 1], &colors[21], sizeof(struct led_rgb));
+
+  rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+  }
+  k_sleep(DELAY_TIME);
+}
 
 static void update_rgb(void) {
   int rc;
@@ -858,19 +1009,11 @@ static void update_rgb(void) {
     color = 1;
   } else if (rgb_mode == 2) {  // Turquoise (slap)
     color = 2;
-  } else if (rgb_mode == 3) {  // Rainbow (left to right animation )
+  } else if (rgb_mode == 3) {  // Rainbow (left to right animation)
     update_rgb_rainbow();
     return;
 
-  } else if (rgb_mode == 4) {  // Valentine (heart shape and expand)
-    update_rgb_valentine();
-    return;
-
-  } else if (rgb_mode == 5) {  // Halloween (Pause... slap)
-    update_rgb_halloween();
-    return;
-
-  } else if (rgb_mode == 6) {  // Christmas (Top to bottom)
+  } else if (rgb_mode == 4) {  // Christmas (top to bottom animation)
     update_rgb_christmas();
     return;
   }
