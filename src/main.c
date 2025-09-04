@@ -1601,36 +1601,6 @@ static void key_pressed(struct input_event *evt, void *user_data) {
       return;
     }
 
-    if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
-      // PAIRING & CONNECTION MODE
-      if (kb_evt.code == INPUT_KEY_PRINT) {
-        central_id_ctrl(kb_evt.value, 1);
-        return;
-
-      } else if (kb_evt.code == INPUT_KEY_SCROLLLOCK) {
-        central_id_ctrl(kb_evt.value, 2);
-        return;
-
-      } else if (kb_evt.code == INPUT_KEY_PAUSE) {
-        central_id_ctrl(kb_evt.value, 3);
-        return;
-      }
-
-      // INITIATE CONNECTION IF NO CENTRAL IS CONNECTED
-      if ((conn_mode[0].conn == NULL) && kb_evt.value &&
-          (atomic_get(&nRF_mode) == WIRELESS_MODE)) {
-        atomic_set(&ble_adv_mode, CONNECTING_MODE);
-        advertising_start();
-        return;
-      }
-
-      // BLE SECURITY LEVEL 4 PASSKEY ENTRY
-      if (atomic_get(&enable_passkey_input) && (kb_evt.value == 1)) {
-        process_passkey_input(kb_evt);
-        return;
-      }
-    }
-
     // FN KEY PRESSED/RELEASED
     if (kb_evt.code == INPUT_BTN_0) {
       if (kb_evt.value == 1) {
@@ -1723,6 +1693,45 @@ static void key_pressed(struct input_event *evt, void *user_data) {
      *      |_ etc. skip
      *
      */
+
+    if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
+      // PAIRING & CONNECTION MODE
+      if (kb_evt.code == INPUT_KEY_PRINT) {
+        central_id_ctrl(kb_evt.value, 1);
+        return;
+
+      } else if (kb_evt.code == INPUT_KEY_SCROLLLOCK) {
+        central_id_ctrl(kb_evt.value, 2);
+        return;
+
+      } else if (kb_evt.code == INPUT_KEY_PAUSE) {
+        central_id_ctrl(kb_evt.value, 3);
+        return;
+      }
+
+      // INITIATE CONNECTION IF NO CENTRAL IS CONNECTED
+      if ((conn_mode[0].conn == NULL) && kb_evt.value &&
+          (atomic_get(&nRF_mode) == WIRELESS_MODE)) {
+        atomic_set(&ble_adv_mode, CONNECTING_MODE);
+        advertising_start();
+        return;
+      }
+
+      // BLE SECURITY LEVEL 4 PASSKEY ENTRY
+      if (atomic_get(&enable_passkey_input) && (kb_evt.value == 1)) {
+        process_passkey_input(kb_evt);
+        return;
+      }
+    }
+
+    if (atomic_get(&nRF_mode) == WIRED_MODE) {
+      if (kb_evt.code == INPUT_KEY_PRINT ||
+          kb_evt.code == INPUT_KEY_SCROLLLOCK ||
+          kb_evt.code == INPUT_KEY_PAUSE) {
+        // Ignore these keys
+        return;
+      }
+    }
 
     // REGISTER USER KEY PRESS
     if (!atomic_get(&enable_passkey_input)) {
@@ -1880,11 +1889,29 @@ static void adv_work_handler(struct k_work *work) {
     }
 
     // Use reset to reclaim the memory storage and create new identity address
-    rc = bt_id_reset(current_central, NULL, NULL);
-    if (rc < 0) {
-      LOG_WRN("Did not create new identity address");
+    /**
+     * @note Special case: When the very last identity address is deleted, the
+     * last identity address cannot create new identity address with
+     * bt_id_reset. Intead, bt_id_create must be used.
+     *
+     */
+
+    if (current_central == 3) {
+      err = bt_id_create(NULL, NULL);
+      if (err < 0) {
+        LOG_WRN(
+            "Invalid identity address found: Did not create new identity "
+            "address (err %d)",
+            rc);
+      }
+
     } else {
-      LOG_INF("Created new identity address");
+      rc = bt_id_reset(current_central, NULL, NULL);
+      if (rc < 0) {
+        LOG_WRN("Did not create new identity address");
+      } else {
+        LOG_INF("Created new identity address");
+      }
     }
 
     const struct bt_le_adv_param *adv_param_pm = NULL;

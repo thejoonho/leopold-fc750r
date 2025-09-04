@@ -178,7 +178,7 @@
                 MATRIX_KEY(2, 0, INPUT_KEY_TAB)
                 MATRIX_KEY(2, 1, INPUT_KEY_Q)
                 MATRIX_KEY(2, 2, INPUT_KEY_W)
-                MATRIX_KEY(2, 3, INPUT_KEY_E)
+                MATRIX_KEY(2, 3, INPUT_KEY_E)    
                 MATRIX_KEY(2, 4, INPUT_KEY_R)
                 MATRIX_KEY(2, 5, INPUT_KEY_T)
                 MATRIX_KEY(2, 6, INPUT_KEY_Y)
