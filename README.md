@@ -1,7 +1,7 @@
 # Custom Bluetooth Keyboard: Leopold FC750R
 
 
->📣 Everything is working. Currently finishing the final task: adding consumer controls to the USB HID report and BLE HID report. 
+> 📣 Keyboard is going to work! Currently cleaning up the code and working on the documentation 🔥 
 <br>
 
 🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth keyboard's schematic and printed circuit board (PCB), assembled the keyboard, and tested the complete system. 
