@@ -709,7 +709,7 @@ static void update_rgb_rainbow(void) {
   int rc;
   size_t cursor = 0;
 
-  while (cursor < 87) {
+  while (cursor < STRIP_NUM_PIXELS) {
     memcpy(&pixels[cursor], &colors[0], sizeof(struct led_rgb));
     cursor++;
   }
@@ -957,7 +957,7 @@ static void update_rgb_christmas(void) {
   int rc;
   size_t cursor = 0;
 
-  while (cursor < 87) {
+  while (cursor < STRIP_NUM_PIXELS) {
     memcpy(&pixels[cursor], &colors[0], sizeof(struct led_rgb));
     cursor++;
   }
@@ -1143,7 +1143,7 @@ static void update_rgb(void) {
     return;
   }
 
-  while (cursor < 87) {
+  while (cursor < STRIP_NUM_PIXELS) {
     memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
     cursor++;
   }
@@ -1164,7 +1164,8 @@ int main(void) {
   int err;
   int rc;
 
-  print_logo();
+  // Remove for faster startup 
+  // print_logo();
 
   // POWER MANAGEMENT
   printk("\n\x1b[32m\x1b[1mPower Management Setup:\x1b[39m\x1b[0m\n");
