@@ -137,7 +137,7 @@
 
             keymap {
                 compatible = "input-keymap";
-                // MATRIX_KEY(row, col, INPUT_KEY) - Index 0
+                // MATRIX_KEY(row, col, INPUT_KEY)
                 keymap = <
 
                 MATRIX_KEY(0, 0, INPUT_KEY_ESC)
@@ -178,7 +178,7 @@
                 MATRIX_KEY(2, 0, INPUT_KEY_TAB)
                 MATRIX_KEY(2, 1, INPUT_KEY_Q)
                 MATRIX_KEY(2, 2, INPUT_KEY_W)
-                MATRIX_KEY(2, 3, INPUT_KEY_E)    
+                MATRIX_KEY(2, 3, INPUT_KEY_E)
                 MATRIX_KEY(2, 4, INPUT_KEY_R)
                 MATRIX_KEY(2, 5, INPUT_KEY_T)
                 MATRIX_KEY(2, 6, INPUT_KEY_Y)
@@ -234,7 +234,6 @@
                 MATRIX_KEY(5, 17, INPUT_KEY_RIGHT)
                 >;
 
-                // Index 1
                 row-size = <6>;
                 col-size = <18>;
             };
@@ -305,7 +304,6 @@
     };
 };
 
-
 &pinctrl {
     i2s0_default_alt: i2s0_default_alt {
         group1 {
@@ -322,7 +320,6 @@
         psels = <NRF_PSEL(TWIM_SDA, 0, 26)>, <NRF_PSEL(TWIM_SCL, 0, 17)>;
     };
 };
-
 
 i2s_led: &i2s0 {
     status = "okay";
