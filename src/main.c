@@ -222,8 +222,12 @@ static void central_id_ctrl(int32_t pressed, int central_id);
 
 #define OUTPUT_REPORT_MAX_LEN 1
 #define OUTPUT_REPORT_BIT_MASK_CAPS_LOCK 0x02
-#define INPUT_REP_KEYS_REF_ID 0
+#define INPUT_REP_KEYS_REF_ID 1
 #define OUTPUT_REP_KEYS_REF_ID 0
+
+#define INPUT_REP_CC_REF_ID 2
+#define INPUT_REP_CC_LEN 2
+
 #define SCAN_CODE_POS 2
 #define KEYS_MAX_LEN (INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)
 
@@ -264,7 +268,11 @@ enum { OUTPUT_REP_KEYS_IDX = 0 };
  * @note INPUT report internal indexes. This is a position in internal report
  * table and is not related to report ID.
  */
-enum { INPUT_REP_KEYS_IDX = 0 };
+/* Internal indexes (positions in inp_rep_group_init.reports[]) */
+enum {
+  INPUT_REP_KEYS_IDX = 0,
+  INPUT_REP_CC_IDX,
+};
 
 BT_HIDS_DEF(hids_obj, OUTPUT_REPORT_MAX_LEN, INPUT_REPORT_KEYS_MAX_LEN);
 
@@ -288,6 +296,11 @@ static struct keyboard_state {
   uint8_t ctrl_keys_state;
   uint8_t keys_state[KEY_PRESS_MAX];
 } hid_keyboard_state;
+
+static struct cc_keyboard_state {
+  uint8_t f1_f8;
+  uint8_t f9_f12;
+} cc_hid_keyboard_state;
 
 static int64_t pairing_key_start_time = 0;
 static atomic_t enable_passkey_input = false;
@@ -457,6 +470,27 @@ static void ble_hid_init(void);
 static int key_report_con_send(const struct keyboard_state *state,
                                bool boot_mode, struct bt_conn *conn);
 
+/** @brief Function process consumer control keyboard state and sends it
+ *
+ *  @param pstate     The state to be sent
+ *  @param boot_mode  Information if boot mode protocol is selected.
+ *  @param conn       Connection handler
+ *
+ *  @return 0 on success or negative error code.
+ */
+static int cc_key_report_con_send(const struct cc_keyboard_state *state,
+                                  bool boot_mode, struct bt_conn *conn) {
+  int err = 0;
+  uint8_t data[2];
+
+  data[0] = state->f1_f8;
+  data[1] = state->f9_f12;
+
+  err = bt_hids_inp_rep_send(&hids_obj, conn, INPUT_REP_CC_IDX, data,
+                             sizeof(data), NULL);
+  return err;
+}
+
 /** @brief Function process and send keyboard state to all active connections
  *
  * Function process global keyboard state and send it to all connected
@@ -547,43 +581,19 @@ static const uint8_t hid_report_desc[] = {
     0x75, 0x01,  //     Report Size (1)
     0x95, 0x0C,  //     Report Count (12)
 
-    0x09, 0x70,  //     Usage (Display Brightness Decrement)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0x6F,  //     Usage (Display Brightness Increment)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x0A, 0x9F, 0x02,  //     Usage (Mission Control - MacOs)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x0A, 0x21, 0x02,  // Usage (AC Search) - (Spotlight - MacOs)
-    // 0x81, 0x02,        // Input (Data, Variable, Absolute)
-
-    0x09, 0xCF,  //     Usage (Start or Stop Voice Dictation Session)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x0A, 0xA2,
-    0x02,  //     Usage (AC Desktop Show All Applications) - (Launchpad - MacOs)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0xB6,  //     Usage (Scan Previous Track)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0xCD,  //     Usage (Play/Pause)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0xB5,  //     Usage (Scan Next Track)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0xE2,  //     Usage (Mute)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0xEA,  //     Usage (Volume Down)
-    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
-
-    0x09, 0xE9,  //     Usage (Volume Up)
-
-    0x81, 0x02,  //     Input (Data, Variable, Absolute)
+    0x09, 0x70,        //     Usage (Display Brightness Decrement)
+    0x09, 0x6F,        //     Usage (Display Brightness Increment)
+    0x0A, 0x9F, 0x02,  //     Usage (AC Desktop Show All Windows)
+    0x0A, 0x21, 0x02,  //     Usage (AC Search)
+    0x09, 0xCF,        //     Usage (Start or Stop Voice Dictation Session)
+    0x0A, 0xA2, 0x02,  //     Usage (AC Desktop Show All Applications)
+    0x09, 0xB6,        //     Usage (Scan Previous Track)
+    0x09, 0xCD,        //     Usage (Play/Pause)
+    0x09, 0xB5,        //     Usage (Scan Next Track)
+    0x09, 0xE2,        //     Usage (Mute)
+    0x09, 0xEA,        //     Usage (Volume Down)
+    0x09, 0xE9,        //     Usage (Volume Up)
+    0x81, 0x02,        //     Input (Data, Variable, Absolute)
 
     0xC0  // End Collection
 };
@@ -1513,9 +1523,14 @@ int main(void) {
     }
 
     if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
-      uint8_t key = input_to_hid_modifier(kb_evt.code);
-      if (key == 0) {
-        key = (uint8_t)input_to_hid_code(kb_evt.code);
+      if (!multimedia_key) {
+        key = input_to_hid_modifier(kb_evt.code);
+        if (key == 0) {
+          key = (uint8_t)input_to_hid_code(kb_evt.code);
+          mod_key = false;
+        }
+      } else {
+        key = cc_code;
         mod_key = false;
       }
 
@@ -1851,7 +1866,7 @@ static void key_pressed(struct input_event *evt, void *user_data) {
             break;
 
           case INPUT_KEY_F3:
-            cc_code = 0xC1;
+            cc_code = 0x9F;
             multimedia_key = true;
             break;
 
@@ -1861,12 +1876,12 @@ static void key_pressed(struct input_event *evt, void *user_data) {
             break;
 
           case INPUT_KEY_F5:
-            cc_code = 0xD8;
+            cc_code = 0xCF;
             multimedia_key = true;
             break;
 
           case INPUT_KEY_F6:
-            cc_code = 0x9B;
+            cc_code = 0xA2;
             multimedia_key = true;
             break;
 
@@ -2617,13 +2632,43 @@ static void ble_hid_init(void) {
       0x19, 0x01, /* Usage Minimum (1) */
       0x29, 0x05, /* Usage Maximum (5) */
       0x91, 0x02, /* Output (Data, Variable, Absolute), */
-                  /* Led report */
+
+      /* Led report */
       0x95, 0x01, /* Report Count (1) */
       0x75, 0x03, /* Report Size (3) */
       0x91, 0x01, /* Output (Data, Variable, Absolute), */
                   /* Led report padding */
 
-      0xC0 /* End Collection (Application) */
+      0xC0, /* End Collection (Application) */
+
+      // Report 2
+      0x05,
+      0x0C,        // Usage Page (Consumer)
+      0x09, 0x01,  // Usage (Consumer Control)
+      0xA1, 0x01,  // Collection (Application)
+
+      0x85, INPUT_REP_CC_REF_ID, /* Report Id 2 */
+      0x15, 0x00,                //     Logical minimum (0)
+      0x25, 0x01,                //     Logical maximum (1)
+      0x75, 0x01,                //     Report Size (1)
+      0x95, 0x0C,                //     Report Count (12)
+
+      0x09, 0x70,        //     Usage (Display Brightness Decrement)
+      0x09, 0x6F,        //     Usage (Display Brightness Increment)
+      0x0A, 0x9F, 0x02,  //     Usage (AC Desktop Show All Windows)
+      0x0A, 0x21, 0x02,  //     Usage (AC Search)
+      0x09, 0xCF,        //     Usage (Start or Stop Voice Dictation Session)
+      0x0A, 0xA2, 0x02,  //     Usage (AC Desktop Show All Applications)
+      0x09, 0xB6,        //     Usage (Scan Previous Track)
+      0x09, 0xCD,        //     Usage (Play/Pause)
+      0x09, 0xB5,        //     Usage (Scan Next Track)
+      0x09, 0xE2,        //     Usage (Mute)
+      0x09, 0xEA,        //     Usage (Volume Down)
+      0x09, 0xE9,        //     Usage (Volume Up)
+      0x81, 0x02,        //     Input (Data, Variable, Absolute)
+
+      0xC0  // End Collection
+
   };
 
   hids_init_obj.rep_map.data = report_map;
@@ -2634,17 +2679,25 @@ static void ble_hid_init(void) {
   hids_init_obj.info.flags =
       (BT_HIDS_REMOTE_WAKE | BT_HIDS_NORMALLY_CONNECTABLE);
 
+  // Keyboard input report
   hids_inp_rep = &hids_init_obj.inp_rep_group_init.reports[INPUT_REP_KEYS_IDX];
   hids_inp_rep->size = INPUT_REPORT_KEYS_MAX_LEN;
   hids_inp_rep->id = INPUT_REP_KEYS_REF_ID;
   hids_init_obj.inp_rep_group_init.cnt++;
 
+  // Led output report
   hids_outp_rep =
       &hids_init_obj.outp_rep_group_init.reports[OUTPUT_REP_KEYS_IDX];
   hids_outp_rep->size = OUTPUT_REPORT_MAX_LEN;
   hids_outp_rep->id = OUTPUT_REP_KEYS_REF_ID;
   hids_outp_rep->handler = hids_outp_rep_handler;
   hids_init_obj.outp_rep_group_init.cnt++;
+
+  // Consumer control report
+  hids_inp_rep = &hids_init_obj.inp_rep_group_init.reports[INPUT_REP_CC_IDX];
+  hids_inp_rep->size = INPUT_REP_CC_LEN;
+  hids_inp_rep->id = INPUT_REP_CC_REF_ID;
+  hids_init_obj.inp_rep_group_init.cnt++;
 
   hids_init_obj.is_kb = true;
   hids_init_obj.boot_kb_outp_rep_handler = hids_boot_kb_outp_rep_handler;
@@ -2686,8 +2739,16 @@ static int key_report_send(void) {
     if (conn_mode[i].conn) {
       int err;
 
-      err = key_report_con_send(&hid_keyboard_state, conn_mode[i].in_boot_mode,
-                                conn_mode[i].conn);
+      if (!multimedia_key) {
+        err = key_report_con_send(&hid_keyboard_state,
+                                  conn_mode[i].in_boot_mode, conn_mode[i].conn);
+      } else {
+        err = cc_key_report_con_send(&cc_hid_keyboard_state,
+                                     conn_mode[i].in_boot_mode,
+                                     conn_mode[i].conn);
+        multimedia_key = false;  // Reset
+      }
+
       if (err) {
         LOG_WRN("Key report send (error: %d)", err);
         return err;
@@ -2698,34 +2759,101 @@ static int key_report_send(void) {
 }
 
 static int hid_kbd_state_key_set(uint8_t key, bool mod_key) {
-  if (mod_key) {
-    uint8_t ctrl_mask = key;
-    hid_keyboard_state.ctrl_keys_state |= ctrl_mask;
+  if (!multimedia_key) {
+    if (mod_key) {
+      uint8_t ctrl_mask = key;
+      hid_keyboard_state.ctrl_keys_state |= ctrl_mask;
+      return 0;
+    }
+
+    for (size_t i = 0; i < KEY_PRESS_MAX; ++i) {
+      if (hid_keyboard_state.keys_state[i] == 0) {
+        hid_keyboard_state.keys_state[i] = key;
+        return 0;
+      }
+    }
+  } else {
+    cc_hid_keyboard_state.f1_f8 = 0x00;
+    cc_hid_keyboard_state.f9_f12 = 0x00;
+
+    switch (key) {
+      case 0x70:
+        cc_hid_keyboard_state.f1_f8 = 0x01;
+        break;
+
+      case 0x6F:
+        cc_hid_keyboard_state.f1_f8 = 0x02;
+        break;
+
+      case 0x9F:
+        cc_hid_keyboard_state.f1_f8 = 0x04;
+        break;
+
+      case 0x21:
+        cc_hid_keyboard_state.f1_f8 = 0x08;
+        break;
+
+      case 0xCF:
+        cc_hid_keyboard_state.f1_f8 = 0x10;
+        break;
+
+      case 0xA2:
+        cc_hid_keyboard_state.f1_f8 = 0x20;
+        break;
+
+      case 0xB6:
+        cc_hid_keyboard_state.f1_f8 = 0x40;
+        break;
+
+      case 0xCD:
+        cc_hid_keyboard_state.f1_f8 = 0x80;
+        break;
+
+      case 0xB5:
+        cc_hid_keyboard_state.f9_f12 = 0x01;
+        break;
+
+      case 0xE2:
+        cc_hid_keyboard_state.f9_f12 = 0x02;
+        break;
+
+      case 0xEA:
+        cc_hid_keyboard_state.f9_f12 = 0x04;
+        break;
+
+      case 0xE9:
+        cc_hid_keyboard_state.f9_f12 = 0x08;
+        break;
+
+      default:
+        break;
+    }
     return 0;
   }
 
-  for (size_t i = 0; i < KEY_PRESS_MAX; ++i) {
-    if (hid_keyboard_state.keys_state[i] == 0) {
-      hid_keyboard_state.keys_state[i] = key;
-      return 0;
-    }
-  }
   /* All slots busy */
   return -EBUSY;
 }
 
 static int hid_kbd_state_key_clear(uint8_t key, bool mod_key) {
-  if (mod_key) {
-    uint8_t ctrl_mask = key;
-    hid_keyboard_state.ctrl_keys_state &= ~ctrl_mask;
-    return 0;
-  }
-  for (size_t i = 0; i < KEY_PRESS_MAX; ++i) {
-    if (hid_keyboard_state.keys_state[i] == key) {
-      hid_keyboard_state.keys_state[i] = 0;
+  if (!multimedia_key) {
+    if (mod_key) {
+      uint8_t ctrl_mask = key;
+      hid_keyboard_state.ctrl_keys_state &= ~ctrl_mask;
       return 0;
     }
+    for (size_t i = 0; i < KEY_PRESS_MAX; ++i) {
+      if (hid_keyboard_state.keys_state[i] == key) {
+        hid_keyboard_state.keys_state[i] = 0;
+        return 0;
+      }
+    }
+  } else {
+    cc_hid_keyboard_state.f1_f8 = 0x00;
+    cc_hid_keyboard_state.f9_f12 = 0x00;
+    return 0;
   }
+
   /* Key not found */
   return -EINVAL;
 }
@@ -2832,7 +2960,7 @@ static int usb_hid_report_set(uint8_t key, bool mod_key) {
         cc_report[1] = 0x02;
         break;
 
-      case 0xC1:
+      case 0x9F:
         cc_report[1] = 0x04;
         break;
 
@@ -2840,11 +2968,11 @@ static int usb_hid_report_set(uint8_t key, bool mod_key) {
         cc_report[1] = 0x08;
         break;
 
-      case 0xD8:
+      case 0xCF:
         cc_report[1] = 0x10;
         break;
 
-      case 0x9B:
+      case 0xA2:
         cc_report[1] = 0x20;
         break;
 
