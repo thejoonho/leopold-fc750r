@@ -169,7 +169,7 @@ static int rgb_mode = RGB_OFF;
  * @note Initializes the current_central, central_addr, central2_addr, and
  * central3_addr with the stored value.
  *
- * @note Intializes the fn_mode and rgb_mode as well.
+ * @note Initializes the fn_mode and rgb_mode as well.
  */
 int leopold_fc750R_handle_set(const char *name, size_t len,
                               settings_read_cb read_cb, void *cb_arg);
@@ -674,10 +674,10 @@ static int usb_hid_report_clear(uint8_t key, bool mod_key);
 static const struct led_rgb colors[] = {
     RGB(0x00, 0x00, 0x00), /* off */
     RGB(0x03, 0x03, 0x03), /* white */
-    RGB(0x00, 0x07, 0x08), /* torquoise */
+    RGB(0x00, 0x07, 0x08), /* turquoise */
 
     // Rainbow
-    RGB(0x00, 0x07, 0x08), /* torquoise */
+    RGB(0x00, 0x07, 0x08), /* turquoise */
     RGB(0x02, 0x04, 0x09), /* royal blue */
     RGB(0x01, 0x02, 0x0c), /* dark blue */
     RGB(0x02, 0x00, 0x0d), /* dark dark blue */
@@ -691,8 +691,8 @@ static const struct led_rgb colors[] = {
     RGB(0x0e, 0x00, 0x01), /* red  */
     RGB(0x0f, 0x00, 0x00), /* dark red  */
     RGB(0x0e, 0x01, 0x00), /* tangerine  */
-    RGB(0x0c, 0x03, 0x00), /* organge  */
-    RGB(0x0a, 0x05, 0x00), /* organge - yellow  */
+    RGB(0x0c, 0x03, 0x00), /* orange  */
+    RGB(0x0a, 0x05, 0x00), /* orange - yellow  */
     RGB(0x06, 0x09, 0x00), /* yellow - green */
     RGB(0x01, 0x0e, 0x00), /*  green  */
 
@@ -1778,36 +1778,43 @@ static void key_pressed(struct input_event *evt, void *user_data) {
       if ((kb_evt.code == INPUT_KEY_0) && (kb_evt.value == 1)) {
         rgb_mode = 0;
         update_rgb();
+        return;
       }
 
       if ((kb_evt.code == INPUT_KEY_1) && (kb_evt.value == 1)) {
         rgb_mode = 1;
         update_rgb();
+        return;
       }
 
       if ((kb_evt.code == INPUT_KEY_2) && (kb_evt.value == 1)) {
         rgb_mode = 2;
         update_rgb();
+        return;
       }
 
       if ((kb_evt.code == INPUT_KEY_3) && (kb_evt.value == 1)) {
         rgb_mode = 3;
         update_rgb();
+        return;
       }
 
       if ((kb_evt.code == INPUT_KEY_4) && (kb_evt.value == 1)) {
         rgb_mode = 4;
         update_rgb();
+        return;
       }
 
       if ((kb_evt.code == INPUT_KEY_5) && (kb_evt.value == 1)) {
         rgb_mode = 4;
         update_rgb();
+        return;
       }
 
       if ((kb_evt.code == INPUT_KEY_6) && (kb_evt.value == 1)) {
         rgb_mode = 6;
         update_rgb();
+        return;
       }
     }
 
@@ -1921,31 +1928,74 @@ static void key_pressed(struct input_event *evt, void *user_data) {
       }
     }
 
-    // if (fn_mode == FN_MODE) {
-    //   if (fn_pressed) {
-    //     // CHANGE FN KEYS TO MULTIMEDIA KEYS
-    //   }
-    // }
+    if (fn_mode == FN_MODE) {
+      if (fn_pressed) {
+        switch (kb_evt.code) {
+          case INPUT_KEY_F1:
+            cc_code = 0x70;
+            multimedia_key = true;
+            break;
 
-    // CHANGE FN KEYS/MULTIMEDIA KEYS BASED ON FN_MODE
-    /**
-     * if(fn_pressed = true)
-     *    |_ if (FN_MODE = FN_KEYS)
-     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
-     *      |_ etc. skip
-     *  |_ if (FN_MODE = MULTIMEDEIA Keys)
-     *      |_ INPUT_KEY_F1
-     *      |_ etc. skip
-     *
-     *  if(fn_pressed = false)
-     *    |_ if (FN_MODE = FN_KEYS)
-     *      |_ INPUT_KEY_F1
-     *      |_ etc. skip
-     *  |_ if (FN_MODE = MULTIMEDEIA Keys )
-     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
-     *      |_ etc. skip
-     *
-     */
+          case INPUT_KEY_F2:
+            cc_code = 0x6F;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F3:
+            cc_code = 0x9F;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F4:
+            cc_code = 0x21;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F5:
+            cc_code = 0xCF;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F6:
+            cc_code = 0xA2;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F7:
+            cc_code = 0xB6;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F8:
+            cc_code = 0xCD;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F9:
+            cc_code = 0xB5;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F10:
+            cc_code = 0xE2;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F11:
+            cc_code = 0xEA;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F12:
+            cc_code = 0xE9;
+            multimedia_key = true;
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
 
     // REGISTER USER KEY PRESS
     if (!atomic_get(&enable_passkey_input)) {
@@ -2106,7 +2156,7 @@ static void adv_work_handler(struct k_work *work) {
     /**
      * @note Special case: When the very last identity address is deleted, the
      * last identity address cannot create new identity address with
-     * bt_id_reset. Intead, bt_id_create must be used.
+     * bt_id_reset. Instead, bt_id_create must be used.
      *
      */
 
