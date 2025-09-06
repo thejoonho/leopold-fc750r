@@ -182,6 +182,8 @@ SETTINGS_STATIC_HANDLER_DEFINE(leopold_fc750R, "leopold_fc750R", NULL,
 ////////////////////////////////////////////////////////////////////////
 
 static bool fn_pressed = false;
+static bool multimedia_key = false;
+static uint8_t cc_code = 0x00;
 
 struct kb_event {
   uint16_t code;
@@ -485,10 +487,110 @@ static int hid_kbd_state_key_clear(uint8_t key, bool mod_key);
 static const struct gpio_dt_spec dip2 = GPIO_DT_SPEC_GET(DIP2_NODE, gpios);
 
 static bool usb_hid_ready = false;
-static const uint8_t hid_report_desc[] = HID_KEYBOARD_REPORT_DESC();
+// static const uint8_t hid_report_desc[] = HID_KEYBOARD_REPORT_DESC();
+
+static const uint8_t hid_report_desc[] = {
+
+    // Report 1
+    0x05, 0x01, /* Usage Page (Generic Desktop) */
+    0x09, 0x06, /* Usage (Keyboard) */
+    0xA1, 0x01, /* Collection (Application) */
+
+    0x85, 0x01, /* Report Id 1 */
+    0x05, 0x07, /* Usage Page (Key Codes) */
+    0x19, 0xe0, /* Usage Minimum (224) */
+    0x29, 0xe7, /* Usage Maximum (231) */
+    0x15, 0x00, /* Logical Minimum (0) */
+    0x25, 0x01, /* Logical Maximum (1) */
+    0x75, 0x01, /* Report Size (1) */
+    0x95, 0x08, /* Report Count (8) */
+    0x81, 0x02, /* Input (Data, Variable, Absolute) */
+
+    0x95, 0x01, /* Report Count (1) */
+    0x75, 0x08, /* Report Size (8) */
+    0x81, 0x01, /* Input (Constant) reserved byte(1) */
+
+    0x95, 0x06, /* Report Count (6) */
+    0x75, 0x08, /* Report Size (8) */
+    0x15, 0x00, /* Logical Minimum (0) */
+    0x25, 0x65, /* Logical Maximum (101) */
+    0x05, 0x07, /* Usage Page (Key codes) */
+    0x19, 0x00, /* Usage Minimum (0) */
+    0x29, 0x65, /* Usage Maximum (101) */
+    0x81, 0x00, /* Input (Data, Array) Key array(6 bytes) */
+
+    0x95, 0x05, /* Report Count (5) */
+    0x75, 0x01, /* Report Size (1) */
+    0x05, 0x08, /* Usage Page (Page# for LEDs) */
+    0x19, 0x01, /* Usage Minimum (1) */
+    0x29, 0x05, /* Usage Maximum (5) */
+    0x91, 0x02, /* Output (Data, Variable, Absolute), */
+
+    /* Led report */
+    0x95, 0x01, /* Report Count (1) */
+    0x75, 0x03, /* Report Size (3) */
+    0x91, 0x01, /* Output (Data, Variable, Absolute), */
+                /* Led report padding */
+
+    0xC0, /* End Collection (Application) */
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Report 2
+    0x05, 0x0C,  // Usage Page (Consumer)
+    0x09, 0x01,  // Usage (Consumer Control)
+    0xA1, 0x01,  // Collection (Application)
+
+    0x85, 0x02,  /* Report Id 2 */
+    0x15, 0x00,  //     Logical minimum (0)
+    0x25, 0x01,  //     Logical maximum (1)
+    0x75, 0x01,  //     Report Size (1)
+    0x95, 0x0C,  //     Report Count (12)
+
+    0x09, 0x70,  //     Usage (Display Brightness Decrement)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0x6F,  //     Usage (Display Brightness Increment)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x0A, 0x9F, 0x02,  //     Usage (Mission Control - MacOs)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x0A, 0x21, 0x02,  // Usage (AC Search) - (Spotlight - MacOs)
+    // 0x81, 0x02,        // Input (Data, Variable, Absolute)
+
+    0x09, 0xCF,  //     Usage (Start or Stop Voice Dictation Session)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x0A, 0xA2,
+    0x02,  //     Usage (AC Desktop Show All Applications) - (Launchpad - MacOs)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0xB6,  //     Usage (Scan Previous Track)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0xCD,  //     Usage (Play/Pause)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0xB5,  //     Usage (Scan Next Track)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0xE2,  //     Usage (Mute)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0xEA,  //     Usage (Volume Down)
+    // 0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0x09, 0xE9,  //     Usage (Volume Up)
+
+    0x81, 0x02,  //     Input (Data, Variable, Absolute)
+
+    0xC0  // End Collection
+};
 
 enum kb_report_idx {
-  KB_MOD_KEY = 0,   // Modifier key
+  KB_RP_ID = 0,
+  KB_MOD_KEY,       // Modifier key
   KB_RESERVED,      // Reserved
   KB_KEY_CODE1,     // Key Code
   KB_KEY_CODE2,     // Key Code
@@ -496,11 +598,15 @@ enum kb_report_idx {
   KB_KEY_CODE4,     // Key Code
   KB_KEY_CODE5,     // Key Code
   KB_KEY_CODE6,     // Key Code
-  KB_REPORT_COUNT,  // 8
+  KB_REPORT_COUNT,  // 9
 };
 
 // HID input report storage & module state
-UDC_STATIC_BUF_DEFINE(report, KB_REPORT_COUNT);  // Submitting input reports
+UDC_STATIC_BUF_DEFINE(
+    report, KB_REPORT_COUNT);  // Submitting input reports (keyboard report)
+UDC_STATIC_BUF_DEFINE(
+    cc_report,
+    KB_REPORT_COUNT);  // Submitting input reports (consumer ctrl report)
 static uint32_t kb_duration;
 static bool kb_ready;  // Lets the system know if it's ok to send
 
@@ -989,6 +1095,7 @@ static void update_rgb_christmas(void) {
 }
 
 static void update_rgb(void) {
+  int err;
   int rc;
   size_t cursor = 0;
   size_t color = 0;
@@ -998,6 +1105,15 @@ static void update_rgb(void) {
    * pixels[i] - the pixels index contain the color it'll have
    * colors[i] - the color index contain the color (RGB)
    */
+
+  // Save the RGB Mode
+  err = settings_save_one("leopold_fc750R/rgb_mode", (const void *)&rgb_mode,
+                          sizeof(rgb_mode));
+  if (err) {
+    LOG_WRN("rgb_mode was not saved to the flash storage (err %d)", err);
+  } else {
+    LOG_INF("rgb_mode = %d was saved to the flash storage", rgb_mode);
+  }
 
   LOG_INF("Displaying RGB Mode %d", rgb_mode);
 
@@ -1313,6 +1429,7 @@ int main(void) {
   printk("\n\x1b[32m\x1b[1mLeopold FC750R Mechanical Setup:\x1b[39m\x1b[0m\n");
 
   fn_pressed = false;
+  multimedia_key = false;
 
   if (gpio_pin_get_dt(&dip2) == 1) {
     atomic_set(&nRF_mode, WIRED_MODE);
@@ -1333,6 +1450,7 @@ int main(void) {
   while (true) {
     struct kb_event kb_evt;
     bool mod_key = true;
+    uint8_t key;
 
     k_msgq_get(&kb_msgq, &kb_evt, K_FOREVER);
 
@@ -1342,12 +1460,16 @@ int main(void) {
         atomic_set(&adv_safe, false);
         bt_conn_disconnect(conn_mode[0].conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
         LOG_INF("Disconnecting from current BLE connection");
-        return 0;
       }
 
-      uint8_t key = input_to_hid_modifier(kb_evt.code);
-      if (key == 0) {
-        key = (uint8_t)input_to_hid_code(kb_evt.code);
+      if (!multimedia_key) {
+        key = input_to_hid_modifier(kb_evt.code);
+        if (key == 0) {
+          key = (uint8_t)input_to_hid_code(kb_evt.code);
+          mod_key = false;
+        }
+      } else {
+        key = cc_code;
         mod_key = false;
       }
 
@@ -1378,7 +1500,13 @@ int main(void) {
         continue;
       }
 
-      rc = hid_device_submit_report(hid_dev, KB_REPORT_COUNT, report);
+      if (!multimedia_key) {
+        rc = hid_device_submit_report(hid_dev, KB_REPORT_COUNT, report);
+      } else {
+        rc = hid_device_submit_report(hid_dev, 3, cc_report);
+        multimedia_key = false;
+      }
+
       if (rc) {
         LOG_WRN("HID submit report error (err: %d)", rc);
       }
@@ -1614,6 +1742,23 @@ static void key_pressed(struct input_event *evt, void *user_data) {
     // FN KEY COMMANDS
     if (fn_pressed) {
       // check for the fn + space first
+      if ((kb_evt.code == INPUT_KEY_SPACE) && (kb_evt.value == 1)) {
+        if (fn_mode == FN_MODE) {
+          fn_mode = MULTIMEDIA_MODE;
+        } else {
+          fn_mode = FN_MODE;
+        }
+
+        // Save the FN Mode
+        err = settings_save_one("leopold_fc750R/fn_mode",
+                                (const void *)&fn_mode, sizeof(fn_mode));
+        if (err) {
+          LOG_WRN("fn_mode was not saved to the flash storage (err %d)", err);
+        } else {
+          LOG_INF("fn_mode = %d was saved to the flash storage", fn_mode);
+        }
+        return;
+      }
 
       if ((kb_evt.code == INPUT_KEY_0) && (kb_evt.value == 1)) {
         rgb_mode = 0;
@@ -1649,50 +1794,7 @@ static void key_pressed(struct input_event *evt, void *user_data) {
         rgb_mode = 6;
         update_rgb();
       }
-
-      // Save the RGB Mode
-      err = settings_save_one("leopold_fc750R/rgb_mode",
-                              (const void *)&rgb_mode, sizeof(rgb_mode));
-      if (err) {
-        LOG_WRN("rgb_mode was not saved to the flash storage (err %d)", err);
-      } else {
-        LOG_INF("rgb_mode = %d was saved to the flash storage", rgb_mode);
-      }
-      return;
     }
-
-    // REROUTE KEYS
-    /**
-     * if (fn_pressed = true)
-     *
-     * FN + Space = Switch FN_Mode
-     *  |_ Save FN_MODE to ZMS
-     *  |_ return
-     * return
-     *
-     * Do the RGB Stuff
-     *
-     */
-
-    // CHANGE FN KEYS/MULTIMEDIA KEYS BASED ON FN_MODE
-    /**
-     * if(fn_pressed = true)
-     *    |_ if (FN_MODE = FN_KEYS)
-     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
-     *      |_ etc. skip
-     *  |_ if (FN_MODE = MULTIMEDEIA Keys)
-     *      |_ INPUT_KEY_F1
-     *      |_ etc. skip
-     *
-     *  if(fn_pressed = false)
-     *    |_ if (FN_MODE = FN_KEYS)
-     *      |_ INPUT_KEY_F1
-     *      |_ etc. skip
-     *  |_ if (FN_MODE = MULTIMEDEIA Keys )
-     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
-     *      |_ etc. skip
-     *
-     */
 
     if (atomic_get(&nRF_mode) == WIRELESS_MODE) {
       // PAIRING & CONNECTION MODE
@@ -1732,6 +1834,103 @@ static void key_pressed(struct input_event *evt, void *user_data) {
         return;
       }
     }
+
+    // FN or MULTIMEDIA KEYS
+    if (fn_mode == MULTIMEDIA_MODE) {
+      if (!fn_pressed) {
+        // DON'T CHANGE ANYTHING, LET THE KEY EVENT BE ASSIGNED TO FN KEY
+        switch (kb_evt.code) {
+          case INPUT_KEY_F1:
+            cc_code = 0x70;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F2:
+            cc_code = 0x6F;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F3:
+            cc_code = 0xC1;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F4:
+            cc_code = 0x21;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F5:
+            cc_code = 0xD8;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F6:
+            cc_code = 0x9B;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F7:
+            cc_code = 0xB6;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F8:
+            cc_code = 0xCD;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F9:
+            cc_code = 0xB5;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F10:
+            cc_code = 0xE2;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F11:
+            cc_code = 0xEA;
+            multimedia_key = true;
+            break;
+
+          case INPUT_KEY_F12:
+            cc_code = 0xE9;
+            multimedia_key = true;
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+
+    // if (fn_mode == FN_MODE) {
+    //   if (fn_pressed) {
+    //     // CHANGE FN KEYS TO MULTIMEDIA KEYS
+    //   }
+    // }
+
+    // CHANGE FN KEYS/MULTIMEDIA KEYS BASED ON FN_MODE
+    /**
+     * if(fn_pressed = true)
+     *    |_ if (FN_MODE = FN_KEYS)
+     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
+     *      |_ etc. skip
+     *  |_ if (FN_MODE = MULTIMEDEIA Keys)
+     *      |_ INPUT_KEY_F1
+     *      |_ etc. skip
+     *
+     *  if(fn_pressed = false)
+     *    |_ if (FN_MODE = FN_KEYS)
+     *      |_ INPUT_KEY_F1
+     *      |_ etc. skip
+     *  |_ if (FN_MODE = MULTIMEDEIA Keys )
+     *      |_ INPUT_KEY_F1 -> INPUT_KEY_BRIGHETNESSLOW
+     *      |_ etc. skip
+     *
+     */
 
     // REGISTER USER KEY PRESS
     if (!atomic_get(&enable_passkey_input)) {
@@ -2602,19 +2801,81 @@ static void msg_cb(struct usbd_context *const usbd_ctx,
 }
 
 static int usb_hid_report_set(uint8_t key, bool mod_key) {
-  if (mod_key) {
-    uint8_t ctrl_mask = key;
-    report[KB_MOD_KEY] |= ctrl_mask;
-    report[KB_RESERVED] = 0;
-    return 0;
-  }
+  if (!multimedia_key) {
+    report[KB_RP_ID] = 0x01;
 
-  for (size_t i = KB_KEY_CODE1; i < KB_REPORT_COUNT; ++i) {
-    if (report[i] == 0) {
-      report[i] = key;
+    if (mod_key) {
+      uint8_t ctrl_mask = key;
+      report[KB_MOD_KEY] |= ctrl_mask;
       report[KB_RESERVED] = 0;
       return 0;
     }
+
+    for (size_t i = KB_KEY_CODE1; i < KB_REPORT_COUNT; ++i) {
+      if (report[i] == 0) {
+        report[i] = key;
+        report[KB_RESERVED] = 0;
+        return 0;
+      }
+    }
+  } else {
+    cc_report[0] = 0x02;
+    cc_report[1] = 0x00;  // clear previous bits
+    cc_report[2] = 0x00;
+
+    switch (key) {
+      case 0x70:
+        cc_report[1] = 0x01;
+        break;
+
+      case 0x6F:
+        cc_report[1] = 0x02;
+        break;
+
+      case 0xC1:
+        cc_report[1] = 0x04;
+        break;
+
+      case 0x21:
+        cc_report[1] = 0x08;
+        break;
+
+      case 0xD8:
+        cc_report[1] = 0x10;
+        break;
+
+      case 0x9B:
+        cc_report[1] = 0x20;
+        break;
+
+      case 0xB6:
+        cc_report[1] = 0x40;
+        break;
+
+      case 0xCD:
+        cc_report[1] = 0x80;
+        break;
+
+      case 0xB5:
+        cc_report[2] = 0x01;
+        break;
+
+      case 0xE2:
+        cc_report[2] = 0x02;
+        break;
+
+      case 0xEA:
+        cc_report[2] = 0x04;
+        break;
+
+      case 0xE9:
+        cc_report[2] = 0x08;
+        break;
+
+      default:
+        break;
+    }
+    return 0;
   }
 
   /* All slots busy */
@@ -2622,19 +2883,28 @@ static int usb_hid_report_set(uint8_t key, bool mod_key) {
 }
 
 static int usb_hid_report_clear(uint8_t key, bool mod_key) {
-  if (mod_key) {
-    uint8_t ctrl_mask = key;
-    report[KB_MOD_KEY] &= ~ctrl_mask;
-    report[KB_RESERVED] = 0;
-    return 0;
-  }
+  if (!multimedia_key) {
+    report[KB_RP_ID] = 0x01;
 
-  for (size_t i = KB_KEY_CODE1; i < KB_REPORT_COUNT; ++i) {
-    if (report[i] == key) {
-      report[i] = 0;
+    if (mod_key) {
+      uint8_t ctrl_mask = key;
+      report[KB_MOD_KEY] &= ~ctrl_mask;
       report[KB_RESERVED] = 0;
       return 0;
     }
+
+    for (size_t i = KB_KEY_CODE1; i < KB_REPORT_COUNT; ++i) {
+      if (report[i] == key) {
+        report[i] = 0;
+        report[KB_RESERVED] = 0;
+        return 0;
+      }
+    }
+  } else {
+    cc_report[0] = 0x02;
+    cc_report[1] = 0x00;
+    cc_report[2] = 0x00;
+    return 0;
   }
 
   /* Key not found */
