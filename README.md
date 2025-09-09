@@ -1,23 +1,14 @@
 # Custom Bluetooth Keyboard: Leopold FC750R
 
-https://github.com/thejoonho/leopold-fc750r/blob/main/keyboard.jpeg
-
-[<img src="keyboard.jpeg">](https://github.com/thejoonho/leopold-fc750r)
-
 🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth keyboard's schematic and printed circuit board (PCB), assembled the keyboard, and tested the complete system. 
 
-"*Add the main picture here*"
+![head](https://github.com/thejoonho/leopold-fc750r/blob/main/images/keyboard.jpeg)
 
 ## 🗄️ Project Files
 
-### 📑 Altium Designer + Google Doc
-- [Leopold FC750R](https://personal-viewer.365.altium.com/client/index.html?feature=embed&source=85A6DA05-4A21-4D8C-ACF3-C134DFF70774&activeView=3D) & [USB-C Connector](https://personal-viewer.365.altium.com/client/index.html?feature=embed&source=235BD5DE-8155-44AA-9E0C-20B4551AB35A&activeView=3D) (Super cool❗️)
-- [Project Documentation](https://docs.google.com/document/d/1T1kuHEfLhl1W9Vp5NQ1bjV8UXPvdlBXKJn0wyxQ07zg/edit?usp=sharing)
-
-
-### 🎬 Custom Bluetooth Keyboard: Leopold FC750R 
-
-"*Add the video here*"
+- 🪄 [Leopold FC750R](https://personal-viewer.365.altium.com/client/index.html?feature=embed&source=85A6DA05-4A21-4D8C-ACF3-C134DFF70774&activeView=3D) & [USB-C Connector](https://personal-viewer.365.altium.com/client/index.html?feature=embed&source=235BD5DE-8155-44AA-9E0C-20B4551AB35A&activeView=3D) (Super cool❗️)
+- 📑 [Project Documentation](https://docs.google.com/document/d/1T1kuHEfLhl1W9Vp5NQ1bjV8UXPvdlBXKJn0wyxQ07zg/edit?usp=sharing)
+- 🎬 [Project Demo Video]()
 
 ## 💐 Acknowledgements
 
