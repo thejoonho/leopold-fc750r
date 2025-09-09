@@ -1,9 +1,8 @@
 # Custom Bluetooth Keyboard: Leopold FC750R
 
-<br>
+https://github.com/thejoonho/leopold-fc750r/blob/main/keyboard.jpeg
 
-> 🔥 Firmware is finished! Working on the official video demo and the documentation
-<br>
+[<img src="keyboard.jpeg">](https://github.com/thejoonho/leopold-fc750r)
 
 🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth keyboard's schematic and printed circuit board (PCB), assembled the keyboard, and tested the complete system. 
 
