@@ -1,8 +1,8 @@
 # Custom Bluetooth Keyboard: Leopold FC750R
 
-🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth keyboard's schematic and printed circuit board (PCB), assembled the keyboard, and tested the complete system. 
-
 ![head](https://github.com/thejoonho/leopold-fc750r/blob/main/images/keyboard.jpeg)
+
+🛠️ Converted a commercial wired keyboard (Leopold FC750R) into a Bluetooth keyboard. I designed the Bluetooth keyboard's schematic and printed circuit board (PCB), assembled the keyboard, and tested the complete system. 
 
 ## 🗄️ Project Files
 
