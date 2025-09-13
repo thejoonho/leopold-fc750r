@@ -12,8 +12,8 @@
 
 ## 💐 Acknowledgements
 
-- <a href="https://www.linkedin.com/in/aslan-hepdogru-p-eng-7158011b/">*Aslan Hepdogru*</a> and <a href="https://www.linkedin.com/in/mathols/">*Mathias Olsen*</a> for reviewing my keyboard design. 
-- <a href="https://www.linkedin.com/company/rlx-solutions-inc./">*RLX Solutions*</a> for fabricating my keyboard’s PCB. 
+- *[Aslan Hepdogru](https://www.linkedin.com/in/aslan-hepdogru-p-eng-7158011b/)* and *[Mathias Olsen](https://www.linkedin.com/in/mathols/)* for reviewing my keyboard design. 
+- *[RLX Solutions](https://www.linkedin.com/company/rlx-solutions-inc./)*</a> for fabricating my keyboard’s PCB. 
 
 ## ⚠️ Copyright Notice
 
